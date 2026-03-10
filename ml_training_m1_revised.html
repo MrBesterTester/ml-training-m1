@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Training on Your M1 iMac — A Realistic Assessment (Revised)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2d3250;
+    --text: #e4e6ed;
+    --text2: #9ba1b5;
+    --accent: #6c8aff;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --cyan: #22d3ee;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 2rem;
+  }
+
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    color: var(--text2);
+    font-size: 1rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .card-green { border-left: 4px solid var(--green); }
+  .card-amber { border-left: 4px solid var(--amber); }
+  .card-red   { border-left: 4px solid var(--red); }
+  .card-blue  { border-left: 4px solid var(--accent); }
+  .card-cyan  { border-left: 4px solid var(--cyan); }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-green { background: rgba(52,211,153,0.15); color: var(--green); }
+  .badge-amber { background: rgba(251,191,36,0.15); color: var(--amber); }
+  .badge-red   { background: rgba(248,113,113,0.15); color: var(--red); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    background: var(--surface2);
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td { color: var(--text); }
+
+  tr:hover td { background: rgba(108,138,255,0.05); }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface2);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    color: var(--cyan);
+  }
+
+  pre {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .keyword { color: var(--accent2); }
+  .string { color: var(--green); }
+  .comment { color: var(--text2); }
+  .func { color: var(--cyan); }
+  .type { color: var(--amber); }
+
+  ul, ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  li {
+    margin-bottom: 0.4rem;
+    color: var(--text);
+  }
+  li::marker { color: var(--accent); }
+
+  .diagram-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  svg text {
+    font-family: 'Inter', sans-serif;
+  }
+
+  .verdict {
+    background: linear-gradient(135deg, rgba(108,138,255,0.1), rgba(167,139,250,0.1));
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .verdict h2 {
+    margin-top: 0;
+  }
+
+  .project-box {
+    background: linear-gradient(135deg, rgba(52,211,153,0.08), rgba(34,211,238,0.08));
+    border: 2px solid var(--green);
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+  }
+
+  .project-box h3 {
+    color: var(--green);
+    font-size: 1.2rem;
+  }
+
+  .phase-label {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+  }
+
+  .phase-python { background: rgba(108,138,255,0.2); color: var(--accent); }
+  .phase-swift { background: rgba(248,113,113,0.2); color: var(--red); }
+  .phase-deploy { background: rgba(52,211,153,0.2); color: var(--green); }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text2);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .toc-title {
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--accent);
+  }
+  .toc a {
+    display: block;
+    padding: 0.25rem 0;
+    color: var(--text2);
+    font-size: 0.9rem;
+  }
+  .toc a:hover { color: var(--accent); }
+
+  .arrow-connector {
+    text-align: center;
+    margin: 1rem 0;
+    font-size: 1.5rem;
+    color: var(--border);
+  }
+
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>ML Training on Your M1 iMac</h1>
+<p class="subtitle">Revised Edition — Now with a recommended CompuFlair project and a complete Python → Swift bridge using Xcode. March 9, 2026.</p>
+
+<nav class="toc">
+  <div class="toc-title">Contents</div>
+  <a href="#tldr">TL;DR — The Short Answer</a>
+  <a href="#landscape">The Apple ML Landscape in 2026</a>
+  <a href="#m1-reality">Your M1 iMac: What It Can (and Can't) Do</a>
+  <a href="#frameworks">Framework Comparison: MLX vs. PyTorch MPS</a>
+  <a href="#mojo">Mojo on Metal — Where Things Stand</a>
+  <a href="#compuflair">CompuFlair's Physics-Inspired Approach</a>
+  <a href="#project">★ Your Project: House Prices — Python to Swift</a>
+  <a href="#toolkit">Your Toolkit Assessment</a>
+  <a href="#roadmap">Recommended Roadmap</a>
+  <a href="#verdict">The Verdict</a>
+</nav>
+
+<!-- ============================================ -->
+<h2 id="tldr">TL;DR — The Short Answer</h2>
+
+<div class="card card-green">
+  <div class="card-title">✅ Yes — with the right expectations</div>
+  <p style="margin-bottom:0">Your M1 iMac is a perfectly viable machine for <strong>learning ML fundamentals</strong>, training <strong>classical ML models</strong> and <strong>small neural networks</strong>, running <strong>inference on quantized LLMs up to ~8B parameters</strong>, and doing <strong>fine-tuning with LoRA adapters</strong>. It is <em>not</em> going to compete with even a budget NVIDIA GPU for serious transformer training — but that's not what you need to get started with CompuFlair's physics-inspired curriculum.</p>
+</div>
+
+<!-- ============================================ -->
+<h2 id="landscape">The Apple ML Landscape in 2026</h2>
+
+<p>You're right that Apple has been on a rollercoaster with AI. Their decision in January 2026 to partner with Google — licensing Gemini models at roughly $1B/year for the next Siri — was effectively an admission that their in-house foundation models couldn't keep pace. The new Gemini-powered Siri is rolling out in phases through 2026, with iOS 26.4 bringing the first features.</p>
+
+<p>On the developer side, though, Apple has been more impressive. Metal 4, introduced at WWDC 2025, added the <code>MTL4MachineLearningCommandEncoder</code> — enabling full ML model inference directly on the GPU timeline alongside render and compute work. This is a genuine architectural leap for on-device ML.</p>
+
+<div class="diagram-container">
+<svg width="780" height="320" viewBox="0 0 780 320">
+  <text x="390" y="28" text-anchor="middle" fill="#6c8aff" font-size="15" font-weight="600">Apple ML Stack Evolution (2020–2026)</text>
+
+  <!-- Timeline axis -->
+  <line x1="60" y1="280" x2="740" y2="280" stroke="#2d3250" stroke-width="2"/>
+  <text x="80" y="300" fill="#9ba1b5" font-size="11" text-anchor="middle">2020</text>
+  <text x="190" y="300" fill="#9ba1b5" font-size="11" text-anchor="middle">2021</text>
+  <text x="300" y="300" fill="#9ba1b5" font-size="11" text-anchor="middle">2022</text>
+  <text x="410" y="300" fill="#9ba1b5" font-size="11" text-anchor="middle">2023</text>
+  <text x="520" y="300" fill="#9ba1b5" font-size="11" text-anchor="middle">2024</text>
+  <text x="630" y="300" fill="#9ba1b5" font-size="11" text-anchor="middle">2025</text>
+  <text x="720" y="300" fill="#9ba1b5" font-size="11" text-anchor="middle">2026</text>
+
+  <line x1="80" y1="275" x2="80" y2="285" stroke="#9ba1b5" stroke-width="1.5"/>
+  <line x1="190" y1="275" x2="190" y2="285" stroke="#9ba1b5" stroke-width="1.5"/>
+  <line x1="300" y1="275" x2="300" y2="285" stroke="#9ba1b5" stroke-width="1.5"/>
+  <line x1="410" y1="275" x2="410" y2="285" stroke="#9ba1b5" stroke-width="1.5"/>
+  <line x1="520" y1="275" x2="520" y2="285" stroke="#9ba1b5" stroke-width="1.5"/>
+  <line x1="630" y1="275" x2="630" y2="285" stroke="#9ba1b5" stroke-width="1.5"/>
+  <line x1="720" y1="275" x2="720" y2="285" stroke="#9ba1b5" stroke-width="1.5"/>
+
+  <!-- M1 Launch -->
+  <line x1="100" y1="265" x2="100" y2="230" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="50" y="205" width="100" height="26" rx="6" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="1"/>
+  <text x="100" y="223" text-anchor="middle" fill="#34d399" font-size="10" font-weight="500">M1 Launch</text>
+
+  <!-- TF Metal -->
+  <line x1="190" y1="265" x2="190" y2="175" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="135" y="150" width="110" height="26" rx="6" fill="rgba(251,191,36,0.15)" stroke="#fbbf24" stroke-width="1"/>
+  <text x="190" y="168" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="500">TF Metal + MPS</text>
+
+  <!-- PyTorch MPS -->
+  <line x1="300" y1="265" x2="300" y2="120" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="240" y="95" width="120" height="26" rx="6" fill="rgba(167,139,250,0.15)" stroke="#a78bfa" stroke-width="1"/>
+  <text x="300" y="113" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="500">PyTorch MPS 1.12</text>
+
+  <!-- MLX Launch -->
+  <line x1="460" y1="265" x2="460" y2="175" stroke="#6c8aff" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="410" y="150" width="100" height="26" rx="6" fill="rgba(108,138,255,0.15)" stroke="#6c8aff" stroke-width="1"/>
+  <text x="460" y="168" text-anchor="middle" fill="#6c8aff" font-size="10" font-weight="500">MLX Launch</text>
+
+  <!-- Metal 4 -->
+  <line x1="630" y1="265" x2="630" y2="70" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="575" y="45" width="110" height="26" rx="6" fill="rgba(34,211,238,0.15)" stroke="#22d3ee" stroke-width="1"/>
+  <text x="630" y="63" text-anchor="middle" fill="#22d3ee" font-size="10" font-weight="500">Metal 4 + ML Enc</text>
+
+  <!-- Gemini Siri -->
+  <line x1="720" y1="265" x2="720" y2="120" stroke="#f87171" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="665" y="95" width="110" height="26" rx="6" fill="rgba(248,113,113,0.15)" stroke="#f87171" stroke-width="1"/>
+  <text x="720" y="113" text-anchor="middle" fill="#f87171" font-size="10" font-weight="500">Gemini → Siri</text>
+
+  <!-- M5 MacBook Air -->
+  <line x1="720" y1="265" x2="720" y2="175" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="665" y="150" width="110" height="26" rx="6" fill="rgba(52,211,153,0.15)" stroke="#34d399" stroke-width="1"/>
+  <text x="720" y="168" text-anchor="middle" fill="#34d399" font-size="10" font-weight="500">M5 MacBook Air</text>
+
+  <!-- Mojo Apple GPU -->
+  <line x1="630" y1="265" x2="630" y2="230" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4"/>
+  <rect x="570" y="205" width="120" height="26" rx="6" fill="rgba(251,191,36,0.15)" stroke="#fbbf24" stroke-width="1"/>
+  <text x="630" y="223" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="500">Mojo → Metal α</text>
+</svg>
+</div>
+
+<p>The M5 MacBook Air shipped on March 11, 2026, starting at $1,099 with a 10-core CPU and up to 10-core GPU. The M5 Max and M5 Ultra variants are expected in the Mac Studio between March and mid-2026, with the Ultra starting around $4,000 (96GB base RAM). The $10K range you mentioned is in the ballpark for a maxed-out Ultra config.</p>
+
+<!-- ============================================ -->
+<h2 id="m1-reality">Your M1 iMac: What It Can (and Can't) Do</h2>
+
+<p>Let's be honest about the M1 iMac's capabilities. The M1 has an 8-core GPU with ~2.6 TFLOPS of compute — respectable for its era but a fraction of what even a budget discrete GPU offers. An RTX 2060 Super from 2019 delivers 57 TFLOPS on its tensor cores alone.</p>
+
+<p>The bigger constraint is likely <strong>memory</strong>. If your iMac has 16GB unified memory, macOS reserves about 25–35% for the OS, leaving roughly 10–12GB for GPU ML workloads. That's workable for many tasks, but it hard-limits the model sizes you can train or run inference on.</p>
+
+<table>
+  <tr>
+    <th>Task</th>
+    <th>M1 iMac (16GB)</th>
+    <th>Feasibility</th>
+  </tr>
+  <tr>
+    <td>Classical ML (sklearn, XGBoost)</td>
+    <td>CPU-bound, fast enough</td>
+    <td><span class="badge badge-green">Excellent</span></td>
+  </tr>
+  <tr>
+    <td>Small CNNs / RNNs (MNIST, CIFAR)</td>
+    <td>GPU via MPS, 5–10× CPU speedup</td>
+    <td><span class="badge badge-green">Excellent</span></td>
+  </tr>
+  <tr>
+    <td>Medium neural nets (ResNet-50)</td>
+    <td>Trainable but slow vs CUDA</td>
+    <td><span class="badge badge-amber">Workable</span></td>
+  </tr>
+  <tr>
+    <td>LLM inference (≤8B quantized)</td>
+    <td>MLX handles well; ~20 tok/s</td>
+    <td><span class="badge badge-green">Good</span></td>
+  </tr>
+  <tr>
+    <td>LLM fine-tuning (LoRA, ≤3B)</td>
+    <td>Possible with MLX or PyTorch</td>
+    <td><span class="badge badge-amber">Workable</span></td>
+  </tr>
+  <tr>
+    <td>Transformer training from scratch</td>
+    <td>Memory and speed constrained</td>
+    <td><span class="badge badge-red">Impractical</span></td>
+  </tr>
+  <tr>
+    <td>Large-scale image training</td>
+    <td>Very slow vs cloud GPU</td>
+    <td><span class="badge badge-red">Impractical</span></td>
+  </tr>
+</table>
+
+<p>MLX benchmarks on M1 hardware show GPU speedups of 3–5× over CPU for common operations like linear layers and convolutions, and dramatic gains (up to 37× for softplus, 77× for sort) on specific operations. These are real, meaningful speedups for learning and experimentation.</p>
+
+<!-- ============================================ -->
+<h2 id="frameworks">Framework Comparison: MLX vs. PyTorch MPS</h2>
+
+<p>You have two main framework paths for ML training on Apple Silicon. Here's how they compare:</p>
+
+<table>
+  <tr>
+    <th>Feature</th>
+    <th>MLX</th>
+    <th>PyTorch + MPS</th>
+  </tr>
+  <tr>
+    <td>Developed by</td>
+    <td>Apple (open source)</td>
+    <td>Meta + Apple MPS backend</td>
+  </tr>
+  <tr>
+    <td>API style</td>
+    <td>NumPy-like (also Swift, C++)</td>
+    <td>PyTorch standard</td>
+  </tr>
+  <tr>
+    <td>Memory model</td>
+    <td>Unified memory, lazy eval</td>
+    <td>Unified via MPS, eager</td>
+  </tr>
+  <tr>
+    <td>Maturity</td>
+    <td>Young but rapidly evolving</td>
+    <td>Mature but MPS has bugs</td>
+  </tr>
+  <tr>
+    <td>LLM support</td>
+    <td>MLX-LM: fine-tune + generate</td>
+    <td>HuggingFace ecosystem</td>
+  </tr>
+  <tr>
+    <td>Op coverage on Metal</td>
+    <td>Native, near-complete</td>
+    <td>Many ops, some fallback to CPU</td>
+  </tr>
+  <tr>
+    <td>Known issues</td>
+    <td>Fewer third-party tools</td>
+    <td>MPS perf regression in v2.8+</td>
+  </tr>
+  <tr>
+    <td>Best for</td>
+    <td>Apple-native dev, LLM work</td>
+    <td>Porting existing code</td>
+  </tr>
+</table>
+
+<div class="card card-amber">
+  <div class="card-title">⚠️ PyTorch MPS Caution</div>
+  <p style="margin-bottom:0">As of early 2026, PyTorch MPS users have reported performance regressions starting from v2.8.0, with v2.9 being described as "really bad" on MPS. There have also been bugs with basic operations like manual parameter updates. MLX is generally the safer bet for new Apple Silicon ML projects right now. PyTorch MPS may improve once Metal 4 integration matures.</p>
+</div>
+
+<h3>Getting Started with MLX (5 lines)</h3>
+<pre><span class="comment"># Install MLX</span>
+<span class="comment"># pip install mlx</span>
+
+<span class="keyword">import</span> mlx.core <span class="keyword">as</span> mx
+<span class="keyword">import</span> mlx.nn <span class="keyword">as</span> nn
+<span class="keyword">import</span> mlx.optimizers <span class="keyword">as</span> optim
+
+<span class="comment"># Everything runs on GPU automatically — unified memory, no .to(device)</span>
+x = mx.<span class="func">random.normal</span>((100, 784))
+model = nn.<span class="func">Linear</span>(784, 10)
+y = <span class="func">model</span>(x)  <span class="comment"># GPU-accelerated on M1</span>
+</pre>
+
+<h3>Getting Started with PyTorch MPS (5 lines)</h3>
+<pre><span class="keyword">import</span> torch
+
+device = <span class="string">"mps"</span> <span class="keyword">if</span> torch.backends.mps.<span class="func">is_available</span>() <span class="keyword">else</span> <span class="string">"cpu"</span>
+x = torch.<span class="func">rand</span>(100, 784).<span class="func">to</span>(device)
+model = torch.nn.<span class="func">Linear</span>(784, 10).<span class="func">to</span>(device)
+y = <span class="func">model</span>(x)  <span class="comment"># GPU-accelerated via Metal Performance Shaders</span>
+</pre>
+
+<!-- ============================================ -->
+<h2 id="mojo">Mojo on Metal — Where Things Stand</h2>
+
+<p>Your assessment of Mojo and Apple Silicon is simultaneously right and slightly out of date. Modular <em>did</em> have to compile Mojo down to Apple Intermediate Representation (AIR) bitcode and use the Metal-cpp API to build <code>.metallib</code> files — effectively reverse-engineering the compilation path since Apple's Metal compilation internals aren't publicly documented.</p>
+
+<p>But as of the Modular 26.1 release (January 2026), Mojo has initial Apple Silicon GPU support for M1 through M5 chips. You can run basic GPU kernels today — vector addition, matrix operations, and puzzles 1–15 of the Mojo GPU puzzles work on Apple GPUs.</p>
+
+<div class="card card-amber">
+  <div class="card-title">⚠️ What Mojo on Metal Can't Do Yet</div>
+  <ul style="margin-bottom:0">
+    <li>No MAX graph support → no AI model inference/training</li>
+    <li>No PyTorch interoperability on Apple GPUs</li>
+    <li>No custom ops for MAX</li>
+    <li>Basic debugging (no <code>print()</code> in GPU functions yet)</li>
+    <li>Some M1-specific issues still being investigated</li>
+  </ul>
+</div>
+
+<p>Modular's real momentum is in the cloud: their acquisition of BentoML in February 2026 signals they're doubling down on cloud deployment infrastructure. Their benchmarks show 53% higher prefill throughput on AMD MI325 versus alternatives — that's where the business is. Apple GPU support is being built, but it's a secondary priority.</p>
+
+<p>Your instinct is directionally correct: for <em>production GPU programming</em>, Mojo is cloud-first. But for <em>learning GPU programming concepts</em> on your M1, Mojo's Apple support is progressing and could be a useful educational tool by late 2026.</p>
+
+<!-- ============================================ -->
+<h2 id="compuflair">CompuFlair's Physics-Inspired ML</h2>
+
+<p>I can see why you're drawn to CompuFlair's approach. Dr. Ardavan Borzou's framework interprets the entire field of machine learning through a single equation from statistical mechanics:</p>
+
+<div class="card card-blue">
+  <div class="card-title">The Fundamental Equation</div>
+  <p>Every ML model can be derived from the probability distribution:</p>
+  <p style="text-align:center; font-size:1.3rem; margin:1rem 0; color:var(--cyan);">
+    P = e<sup>−F</sup> / Z
+  </p>
+  <p style="margin-bottom:0;">Where <strong>F</strong> is the free energy (or cost function) and <strong>Z</strong> is the partition function. The key question is always: <em>"How do we find F using data?"</em> This provides beautiful physical duals — logistic regression mirrors a quantum spin-½ in a magnetic field, deep neural networks correspond to the Ising model, and polynomial regression emerges from quantum field theory's partition function.</p>
+</div>
+
+<p>This curriculum is <strong>ideal for your M1 iMac</strong>. The CompuFlair bootcamp covers linear regression, logistic regression, SVMs, decision trees, K-means clustering, and PCA — all classical ML models that train fast on CPU alone and don't need a massive GPU. The courses run on Google Colab by default, but every one of these models will train beautifully on your local M1 using scikit-learn, and the physics intuition transfers directly to understanding why neural network training works.</p>
+
+<div class="diagram-container">
+<svg width="720" height="360" viewBox="0 0 720 360">
+  <text x="360" y="28" text-anchor="middle" fill="#6c8aff" font-size="14" font-weight="600">CompuFlair ML ↔ Physics Duality Map</text>
+
+  <!-- ML Side -->
+  <text x="180" y="60" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="600">Machine Learning</text>
+  <line x1="100" y1="68" x2="260" y2="68" stroke="#a78bfa" stroke-width="1"/>
+
+  <!-- Physics Side -->
+  <text x="540" y="60" text-anchor="middle" fill="#22d3ee" font-size="13" font-weight="600">Physics</text>
+  <line x1="460" y1="68" x2="620" y2="68" stroke="#22d3ee" stroke-width="1"/>
+
+  <!-- 1: Linear Regression <-> Gaussian Gas -->
+  <rect x="40" y="85" width="280" height="36" rx="8" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+  <text x="180" y="108" text-anchor="middle" fill="#e4e6ed" font-size="11">Linear Regression</text>
+  <rect x="400" y="85" width="280" height="36" rx="8" fill="rgba(34,211,238,0.1)" stroke="#22d3ee" stroke-width="1"/>
+  <text x="540" y="108" text-anchor="middle" fill="#e4e6ed" font-size="11">Gaussian Gas Fluctuations</text>
+  <line x1="320" y1="103" x2="400" y2="103" stroke="#2d3250" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="360" y="99" text-anchor="middle" fill="#9ba1b5" font-size="10">↔</text>
+
+  <!-- 2: Logistic Regression <-> Spin-1/2 -->
+  <rect x="40" y="135" width="280" height="36" rx="8" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+  <text x="180" y="158" text-anchor="middle" fill="#e4e6ed" font-size="11">Binary Logistic Regression</text>
+  <rect x="400" y="135" width="280" height="36" rx="8" fill="rgba(34,211,238,0.1)" stroke="#22d3ee" stroke-width="1"/>
+  <text x="540" y="158" text-anchor="middle" fill="#e4e6ed" font-size="11">Spin-½ in Magnetic Field</text>
+  <line x1="320" y1="153" x2="400" y2="153" stroke="#2d3250" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="360" y="149" text-anchor="middle" fill="#9ba1b5" font-size="10">↔</text>
+
+  <!-- 3: Multiclass Logistic <-> Higher-spin -->
+  <rect x="40" y="185" width="280" height="36" rx="8" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+  <text x="180" y="208" text-anchor="middle" fill="#e4e6ed" font-size="11">Multiclass Softmax Classifier</text>
+  <rect x="400" y="185" width="280" height="36" rx="8" fill="rgba(34,211,238,0.1)" stroke="#22d3ee" stroke-width="1"/>
+  <text x="540" y="208" text-anchor="middle" fill="#e4e6ed" font-size="11">Higher-Spin Particle Systems</text>
+  <line x1="320" y1="203" x2="400" y2="203" stroke="#2d3250" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="360" y="199" text-anchor="middle" fill="#9ba1b5" font-size="10">↔</text>
+
+  <!-- 4: Deep Networks <-> Ising -->
+  <rect x="40" y="235" width="280" height="36" rx="8" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+  <text x="180" y="258" text-anchor="middle" fill="#e4e6ed" font-size="11">Deep Neural Networks (Sigmoid)</text>
+  <rect x="400" y="235" width="280" height="36" rx="8" fill="rgba(34,211,238,0.1)" stroke="#22d3ee" stroke-width="1"/>
+  <text x="540" y="258" text-anchor="middle" fill="#e4e6ed" font-size="11">Ising Model (Spin Lattice)</text>
+  <line x1="320" y1="253" x2="400" y2="253" stroke="#2d3250" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="360" y="249" text-anchor="middle" fill="#9ba1b5" font-size="10">↔</text>
+
+  <!-- 5: Polynomial Regression <-> QFT -->
+  <rect x="40" y="285" width="280" height="36" rx="8" fill="rgba(167,139,250,0.1)" stroke="#a78bfa" stroke-width="1"/>
+  <text x="180" y="308" text-anchor="middle" fill="#e4e6ed" font-size="11">Polynomial Regression</text>
+  <rect x="400" y="285" width="280" height="36" rx="8" fill="rgba(34,211,238,0.1)" stroke="#22d3ee" stroke-width="1"/>
+  <text x="540" y="308" text-anchor="middle" fill="#e4e6ed" font-size="11">Quantum Field Theory Partition Fn</text>
+  <line x1="320" y1="303" x2="400" y2="303" stroke="#2d3250" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="360" y="299" text-anchor="middle" fill="#9ba1b5" font-size="10">↔</text>
+
+  <text x="360" y="345" text-anchor="middle" fill="#9ba1b5" font-size="10" font-style="italic">All derived from P = e⁻ᶠ / Z — the universal probability framework</text>
+</svg>
+</div>
+
+<!-- ============================================ -->
+<!-- ★★★ THE NEW PROJECT SECTION ★★★ -->
+<!-- ============================================ -->
+<h2 id="project">★ Your Project: Kaggle House Prices — Python to Swift</h2>
+
+<p>CompuFlair's <strong>Chapter 1: Linear Regression</strong> pairs with the <strong>Kaggle House Prices</strong> "PartyTime Project" — the one publicly available project in their curriculum (the others are locked behind the bootcamp). This is the ideal starting point because it covers the foundational physics dual (linear regression ↔ Gaussian gas fluctuations), uses a well-known Kaggle dataset, trains in seconds on your M1 CPU, and — crucially — maps perfectly into Apple's Create ML and Core ML frameworks in Swift.</p>
+
+<p>Here is a complete two-phase project that takes you from Python to a native Swift app in Xcode:</p>
+
+<!-- PHASE A: PYTHON -->
+<div class="project-box">
+  <span class="phase-label phase-python">Phase A — Python</span>
+  <h3>Train &amp; Export: Kaggle House Prices with scikit-learn</h3>
+  <p>Follow CompuFlair's Chapter 1 course notebook, then extend it to export a Core ML model. The physics interpretation: each feature (square footage, neighborhood, etc.) is an "energy contribution" to the free energy <strong>F</strong>, and the regression coefficients are the system's equilibrium parameters.</p>
+
+<pre><span class="comment"># ═══════════════════════════════════════════════════════════</span>
+<span class="comment"># Phase A: Train in Python, export to Core ML (.mlmodel)</span>
+<span class="comment"># ═══════════════════════════════════════════════════════════</span>
+<span class="comment"># pip install scikit-learn pandas coremltools</span>
+
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> train_test_split
+<span class="keyword">from</span> sklearn.linear_model <span class="keyword">import</span> Ridge
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> mean_squared_error, r2_score
+<span class="keyword">import</span> coremltools <span class="keyword">as</span> ct
+
+<span class="comment"># 1. Load the Kaggle House Prices dataset</span>
+df = pd.<span class="func">read_csv</span>(<span class="string">"train.csv"</span>)
+
+<span class="comment"># 2. Select numeric features (CompuFlair Ch1 style)</span>
+features = [<span class="string">"OverallQual"</span>, <span class="string">"GrLivArea"</span>, <span class="string">"GarageCars"</span>,
+            <span class="string">"TotalBsmtSF"</span>, <span class="string">"FullBath"</span>, <span class="string">"YearBuilt"</span>]
+X = df[features].<span class="func">fillna</span>(0)
+y = np.<span class="func">log1p</span>(df[<span class="string">"SalePrice"</span>])  <span class="comment"># log-transform for normality</span>
+
+<span class="comment"># 3. Split &amp; train — Ridge regression (physics: Gaussian prior on weights)</span>
+X_train, X_test, y_train, y_test = <span class="func">train_test_split</span>(X, y, test_size=0.2, random_state=42)
+model = <span class="func">Ridge</span>(alpha=1.0)
+model.<span class="func">fit</span>(X_train, y_train)
+
+<span class="comment"># 4. Evaluate</span>
+y_pred = model.<span class="func">predict</span>(X_test)
+<span class="func">print</span>(f<span class="string">"RMSE: {np.sqrt(mean_squared_error(y_test, y_pred)):.4f}"</span>)
+<span class="func">print</span>(f<span class="string">"R²:   {r2_score(y_test, y_pred):.4f}"</span>)
+
+<span class="comment"># 5. Convert to Core ML for Swift/Xcode</span>
+coreml_model = ct.converters.sklearn.<span class="func">convert</span>(
+    model,
+    input_features=features,
+    output_feature_names=<span class="string">"log_sale_price"</span>
+)
+coreml_model.author = <span class="string">"Your Name"</span>
+coreml_model.short_description = <span class="string">"House price predictor (Ridge regression, CompuFlair Ch1)"</span>
+coreml_model.<span class="func">save</span>(<span class="string">"HousePricer.mlmodel"</span>)
+<span class="func">print</span>(<span class="string">"✅ Exported HousePricer.mlmodel — drag into Xcode!"</span>)
+</pre>
+</div>
+
+<div class="arrow-connector">⬇</div>
+
+<!-- BRIDGE DIAGRAM -->
+<div class="diagram-container">
+<svg width="700" height="200" viewBox="0 0 700 200">
+  <text x="350" y="24" text-anchor="middle" fill="#6c8aff" font-size="13" font-weight="600">The Python → Swift Bridge</text>
+
+  <!-- Python box -->
+  <rect x="30" y="50" width="180" height="110" rx="10" fill="rgba(108,138,255,0.1)" stroke="#6c8aff" stroke-width="1.5"/>
+  <text x="120" y="76" text-anchor="middle" fill="#6c8aff" font-size="12" font-weight="600">Python</text>
+  <text x="120" y="98" text-anchor="middle" fill="#e4e6ed" font-size="10">scikit-learn</text>
+  <text x="120" y="114" text-anchor="middle" fill="#e4e6ed" font-size="10">Train Ridge model</text>
+  <text x="120" y="130" text-anchor="middle" fill="#9ba1b5" font-size="9">CompuFlair Ch1 notebook</text>
+  <text x="120" y="148" text-anchor="middle" fill="#22d3ee" font-size="9" font-weight="500">Output: .pkl model</text>
+
+  <!-- Arrow 1 -->
+  <line x1="210" y1="105" x2="260" y2="105" stroke="#2d3250" stroke-width="1.5"/>
+  <polygon points="257,100 257,110 268,105" fill="#2d3250"/>
+
+  <!-- coremltools box -->
+  <rect x="270" y="65" width="150" height="80" rx="10" fill="rgba(251,191,36,0.1)" stroke="#fbbf24" stroke-width="1.5"/>
+  <text x="345" y="92" text-anchor="middle" fill="#fbbf24" font-size="12" font-weight="600">coremltools</text>
+  <text x="345" y="112" text-anchor="middle" fill="#e4e6ed" font-size="10">Convert sklearn →</text>
+  <text x="345" y="128" text-anchor="middle" fill="#22d3ee" font-size="10" font-weight="500">.mlmodel</text>
+
+  <!-- Arrow 2 -->
+  <line x1="420" y1="105" x2="470" y2="105" stroke="#2d3250" stroke-width="1.5"/>
+  <polygon points="467,100 467,110 478,105" fill="#2d3250"/>
+
+  <!-- Xcode / Swift box -->
+  <rect x="480" y="50" width="190" height="110" rx="10" fill="rgba(248,113,113,0.1)" stroke="#f87171" stroke-width="1.5"/>
+  <text x="575" y="76" text-anchor="middle" fill="#f87171" font-size="12" font-weight="600">Xcode + Swift</text>
+  <text x="575" y="98" text-anchor="middle" fill="#e4e6ed" font-size="10">Import .mlmodel</text>
+  <text x="575" y="114" text-anchor="middle" fill="#e4e6ed" font-size="10">Auto-generated Swift API</text>
+  <text x="575" y="130" text-anchor="middle" fill="#9ba1b5" font-size="9">SwiftUI prediction app</text>
+  <text x="575" y="148" text-anchor="middle" fill="#34d399" font-size="9" font-weight="500">Runs on M1 GPU + Neural Engine</text>
+
+  <!-- Bottom note -->
+  <text x="350" y="190" text-anchor="middle" fill="#9ba1b5" font-size="10" font-style="italic">Same model, same weights — Python trains it, Swift deploys it natively</text>
+</svg>
+</div>
+
+<!-- PHASE B: SWIFT -->
+<div class="project-box" style="border-color: var(--red);">
+  <span class="phase-label phase-swift">Phase B — Swift in Xcode</span>
+  <h3>Deploy &amp; Predict: SwiftUI App with Core ML</h3>
+  <p>Once you drag <code>HousePricer.mlmodel</code> into your Xcode project, Xcode automatically generates a Swift class with a type-safe prediction API. No manual bridging — this is what Apple's native toolchain excels at.</p>
+
+<pre><span class="comment">// ═══════════════════════════════════════════════════════════</span>
+<span class="comment">// Phase B: Swift — use the trained model in a native app</span>
+<span class="comment">// ═══════════════════════════════════════════════════════════</span>
+<span class="comment">// 1. Drag HousePricer.mlmodel into your Xcode project</span>
+<span class="comment">//    Xcode auto-generates the HousePricer class</span>
+
+<span class="keyword">import</span> <span class="type">SwiftUI</span>
+<span class="keyword">import</span> <span class="type">CoreML</span>
+<span class="keyword">import</span> <span class="type">Foundation</span>
+
+<span class="keyword">struct</span> <span class="type">HousePredictorView</span>: <span class="type">View</span> {
+    @<span class="type">State</span> <span class="keyword">private var</span> overallQual = <span class="string">7.0</span>
+    @<span class="type">State</span> <span class="keyword">private var</span> grLivArea  = <span class="string">1500.0</span>
+    @<span class="type">State</span> <span class="keyword">private var</span> garageCars = <span class="string">2.0</span>
+    @<span class="type">State</span> <span class="keyword">private var</span> totalBsmtSF = <span class="string">1000.0</span>
+    @<span class="type">State</span> <span class="keyword">private var</span> fullBath   = <span class="string">2.0</span>
+    @<span class="type">State</span> <span class="keyword">private var</span> yearBuilt  = <span class="string">2005.0</span>
+    @<span class="type">State</span> <span class="keyword">private var</span> prediction = <span class="string">""</span>
+
+    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">View</span> {
+        <span class="type">Form</span> {
+            <span class="type">Section</span>(<span class="string">"House Features"</span>) {
+                <span class="func">Slider</span>(value: $overallQual, in: <span class="string">1...10</span>, step: <span class="string">1</span>) {
+                    <span class="type">Text</span>(<span class="string">"Quality: \(Int(overallQual))"</span>)
+                }
+                <span class="func">Slider</span>(value: $grLivArea, in: <span class="string">500...5000</span>, step: <span class="string">50</span>) {
+                    <span class="type">Text</span>(<span class="string">"Living Area: \(Int(grLivArea)) sqft"</span>)
+                }
+                <span class="comment">// ... additional sliders for other features</span>
+            }
+
+            <span class="type">Section</span>(<span class="string">"Prediction"</span>) {
+                <span class="type">Button</span>(<span class="string">"Predict Price"</span>) { <span class="func">predictPrice</span>() }
+                    .<span class="func">buttonStyle</span>(.<span class="type">borderedProminent</span>)
+                <span class="type">Text</span>(prediction)
+                    .<span class="func">font</span>(.<span class="type">title2</span>)
+                    .<span class="func">foregroundColor</span>(.<span class="type">green</span>)
+            }
+        }
+        .<span class="func">navigationTitle</span>(<span class="string">"House Pricer (CompuFlair Ch1)"</span>)
+    }
+
+    <span class="keyword">func</span> <span class="func">predictPrice</span>() {
+        <span class="keyword">do</span> {
+            <span class="keyword">let</span> config = <span class="type">MLModelConfiguration</span>()
+            <span class="keyword">let</span> model  = <span class="keyword">try</span> <span class="type">HousePricer</span>(configuration: config)
+
+            <span class="comment">// Core ML auto-generated input class</span>
+            <span class="keyword">let</span> input  = <span class="type">HousePricerInput</span>(
+                OverallQual: overallQual,
+                GrLivArea:   grLivArea,
+                GarageCars:  garageCars,
+                TotalBsmtSF: totalBsmtSF,
+                FullBath:    fullBath,
+                YearBuilt:   yearBuilt
+            )
+            <span class="keyword">let</span> result = <span class="keyword">try</span> model.<span class="func">prediction</span>(input: input)
+
+            <span class="comment">// Convert back from log-space</span>
+            <span class="keyword">let</span> price = <span class="func">expm1</span>(result.log_sale_price)
+            prediction = <span class="string">"$\(String(format: "%.0f", price))"</span>
+        } <span class="keyword">catch</span> {
+            prediction = <span class="string">"Error: \(error.localizedDescription)"</span>
+        }
+    }
+}
+</pre>
+</div>
+
+<!-- PHASE C: BONUS -->
+<div class="project-box" style="border-color: var(--cyan);">
+  <span class="phase-label phase-deploy">Phase C — Bonus: Train Entirely in Swift</span>
+  <h3>Create ML: Train Without Leaving Xcode</h3>
+  <p>Once you're comfortable with the Python-to-Swift bridge, try training the same model <em>entirely</em> in Swift using Create ML's <code>MLRegressor</code>. Create ML automatically tests multiple algorithms (linear regression, decision trees, boosted trees, random forest) and picks the best one for your data. This is the pure Apple-native path.</p>
+
+<pre><span class="comment">// ═══════════════════════════════════════════════════════════</span>
+<span class="comment">// Phase C: Train entirely in Swift using Create ML</span>
+<span class="comment">// Run in Xcode Playground or Swift script</span>
+<span class="comment">// ═══════════════════════════════════════════════════════════</span>
+
+<span class="keyword">import</span> <span class="type">CreateML</span>
+<span class="keyword">import</span> <span class="type">Foundation</span>
+<span class="keyword">import</span> <span class="type">TabularData</span>
+
+<span class="comment">// 1. Load the Kaggle CSV directly</span>
+<span class="keyword">let</span> csvURL  = <span class="type">URL</span>(fileURLWithPath: <span class="string">"/path/to/train.csv"</span>)
+<span class="keyword">let</span> dataFrame = <span class="keyword">try</span> <span class="type">DataFrame</span>(contentsOfCSVFile: csvURL)
+
+<span class="comment">// 2. Select features</span>
+<span class="keyword">let</span> features = [<span class="string">"OverallQual"</span>, <span class="string">"GrLivArea"</span>, <span class="string">"GarageCars"</span>,
+               <span class="string">"TotalBsmtSF"</span>, <span class="string">"FullBath"</span>, <span class="string">"YearBuilt"</span>, <span class="string">"SalePrice"</span>]
+<span class="keyword">let</span> subset = dataFrame.<span class="func">selecting</span>(columnNames: features)
+
+<span class="comment">// 3. Split training / testing</span>
+<span class="keyword">let</span> (trainData, testData) = subset.<span class="func">randomSplit</span>(by: <span class="string">0.8</span>)
+
+<span class="comment">// 4. Train — Create ML picks the best regressor automatically</span>
+<span class="keyword">let</span> regressor = <span class="keyword">try</span> <span class="type">MLRegressor</span>(
+    trainingData: <span class="type">DataFrame</span>(trainData),
+    targetColumn: <span class="string">"SalePrice"</span>
+)
+
+<span class="comment">// 5. Evaluate</span>
+<span class="keyword">let</span> evaluation = regressor.<span class="func">evaluation</span>(on: <span class="type">DataFrame</span>(testData))
+<span class="func">print</span>(<span class="string">"RMSE: \(evaluation.rootMeanSquaredError)"</span>)
+<span class="func">print</span>(<span class="string">"R²:   \(evaluation.maximumError)"</span>)
+
+<span class="comment">// 6. Save the model</span>
+<span class="keyword">let</span> metadata = <span class="type">MLModelMetadata</span>(
+    author: <span class="string">"Your Name"</span>,
+    shortDescription: <span class="string">"House Pricer — trained entirely in Swift (CompuFlair Ch1)"</span>,
+    version: <span class="string">"1.0"</span>
+)
+<span class="keyword">try</span> regressor.<span class="func">write</span>(
+    to: <span class="type">URL</span>(fileURLWithPath: <span class="string">"/path/to/HousePricer.mlmodel"</span>),
+    metadata: metadata
+)
+<span class="func">print</span>(<span class="string">"✅ Model trained and saved — 100% Swift, no Python needed!"</span>)
+</pre>
+</div>
+
+<!-- PROJECT SUMMARY DIAGRAM -->
+<div class="diagram-container">
+<svg width="720" height="280" viewBox="0 0 720 280">
+  <text x="360" y="24" text-anchor="middle" fill="#6c8aff" font-size="14" font-weight="600">Three Phases of Your House Prices Project</text>
+
+  <!-- Phase A -->
+  <rect x="20" y="50" width="210" height="180" rx="12" fill="rgba(108,138,255,0.08)" stroke="#6c8aff" stroke-width="1.5"/>
+  <circle cx="50" cy="76" r="14" fill="#6c8aff"/>
+  <text x="50" y="80" text-anchor="middle" fill="#0f1117" font-size="11" font-weight="700">A</text>
+  <text x="74" y="80" fill="#6c8aff" font-size="12" font-weight="600">Python + sklearn</text>
+  <text x="30" y="104" fill="#e4e6ed" font-size="10">• CompuFlair Ch1 notebook</text>
+  <text x="30" y="120" fill="#e4e6ed" font-size="10">• Ridge regression training</text>
+  <text x="30" y="136" fill="#e4e6ed" font-size="10">• Physics: Gaussian gas dual</text>
+  <text x="30" y="152" fill="#e4e6ed" font-size="10">• Export via coremltools</text>
+  <text x="30" y="176" fill="#9ba1b5" font-size="9">Tools: Python, pip, Claude Code</text>
+  <rect x="30" y="192" width="190" height="28" rx="6" fill="rgba(108,138,255,0.15)"/>
+  <text x="125" y="210" text-anchor="middle" fill="#6c8aff" font-size="10" font-weight="500">Output: HousePricer.mlmodel</text>
+
+  <!-- Arrow -->
+  <line x1="240" y1="140" x2="260" y2="140" stroke="#2d3250" stroke-width="1.5"/>
+  <polygon points="257,135 257,145 267,140" fill="#2d3250"/>
+
+  <!-- Phase B -->
+  <rect x="270" y="50" width="200" height="180" rx="12" fill="rgba(248,113,113,0.08)" stroke="#f87171" stroke-width="1.5"/>
+  <circle cx="300" cy="76" r="14" fill="#f87171"/>
+  <text x="300" y="80" text-anchor="middle" fill="#0f1117" font-size="11" font-weight="700">B</text>
+  <text x="324" y="80" fill="#f87171" font-size="12" font-weight="600">Swift + Core ML</text>
+  <text x="280" y="104" fill="#e4e6ed" font-size="10">• Import .mlmodel in Xcode</text>
+  <text x="280" y="120" fill="#e4e6ed" font-size="10">• Auto-generated Swift API</text>
+  <text x="280" y="136" fill="#e4e6ed" font-size="10">• SwiftUI prediction app</text>
+  <text x="280" y="152" fill="#e4e6ed" font-size="10">• Slider UI for features</text>
+  <text x="280" y="176" fill="#9ba1b5" font-size="9">Tools: Xcode, SwiftUI</text>
+  <rect x="280" y="192" width="180" height="28" rx="6" fill="rgba(248,113,113,0.15)"/>
+  <text x="370" y="210" text-anchor="middle" fill="#f87171" font-size="10" font-weight="500">Output: Native macOS App</text>
+
+  <!-- Arrow -->
+  <line x1="480" y1="140" x2="500" y2="140" stroke="#2d3250" stroke-width="1.5"/>
+  <polygon points="497,135 497,145 507,140" fill="#2d3250"/>
+
+  <!-- Phase C -->
+  <rect x="510" y="50" width="190" height="180" rx="12" fill="rgba(52,211,153,0.08)" stroke="#34d399" stroke-width="1.5"/>
+  <circle cx="540" cy="76" r="14" fill="#34d399"/>
+  <text x="540" y="80" text-anchor="middle" fill="#0f1117" font-size="11" font-weight="700">C</text>
+  <text x="564" y="80" fill="#34d399" font-size="12" font-weight="600">Pure Swift Training</text>
+  <text x="520" y="104" fill="#e4e6ed" font-size="10">• Create ML framework</text>
+  <text x="520" y="120" fill="#e4e6ed" font-size="10">• MLRegressor auto-picks</text>
+  <text x="520" y="136" fill="#e4e6ed" font-size="10">  best algorithm</text>
+  <text x="520" y="152" fill="#e4e6ed" font-size="10">• No Python dependency</text>
+  <text x="520" y="176" fill="#9ba1b5" font-size="9">Tools: Xcode Playground</text>
+  <rect x="520" y="192" width="170" height="28" rx="6" fill="rgba(52,211,153,0.15)"/>
+  <text x="605" y="210" text-anchor="middle" fill="#34d399" font-size="10" font-weight="500">Output: 100% Swift Pipeline</text>
+
+  <!-- Bottom -->
+  <text x="360" y="260" text-anchor="middle" fill="#9ba1b5" font-size="10" font-style="italic">Each phase builds on the last — same dataset, same physics insight, deeper Apple integration</text>
+</svg>
+</div>
+
+<div class="card card-cyan">
+  <div class="card-title">💡 Why This Project Works So Well</div>
+  <ul style="margin-bottom:0">
+    <li><strong>Physics resonance:</strong> CompuFlair Ch1 teaches that linear regression is the ML dual of a Gaussian gas — the cost function F is quadratic, and the partition function Z yields a closed-form solution. Ridge regression adds a Gaussian prior on the weights (thermodynamic "spring constant"), which you experience first in Python.</li>
+    <li><strong>Practical bridge:</strong> The <code>coremltools</code> library converts your sklearn model to <code>.mlmodel</code> format with one function call — the exact same weights now run natively on Apple Silicon's CPU, GPU, and Neural Engine.</li>
+    <li><strong>Swift fluency:</strong> Phase B teaches you SwiftUI and Core ML inference; Phase C teaches you Create ML training. By the end, you can do the entire ML pipeline without ever leaving Xcode.</li>
+    <li><strong>Claude Code as copilot:</strong> Use Claude to explain each step's physics meaning, debug Swift syntax, and generate test cases. Ask it: <em>"Explain the Ridge regression alpha parameter as a spring constant in the Gaussian gas analogy."</em></li>
+  </ul>
+</div>
+
+<!-- ============================================ -->
+<h2 id="toolkit">Your Toolkit Assessment</h2>
+
+<div class="card card-green">
+  <div class="card-title">🟢 Claude Code</div>
+  <p style="margin-bottom:0">Excellent choice as your AI pair programmer. Claude can help you write and debug ML code, explain the math behind CompuFlair's physics analogies, generate PyTorch or MLX training scripts, and iterate rapidly. This is arguably the highest-leverage tool in your stack.</p>
+</div>
+
+<div class="card card-green">
+  <div class="card-title">🟢 Xcode (with Create ML &amp; Core ML)</div>
+  <p style="margin-bottom:0">For on-device deployment, Apple's <strong>Create ML</strong> app lets you train Core ML models with no code at all — image classifiers, text classifiers, sound classifiers, and more. Xcode 26 now integrates LLM-powered coding assistance (supporting Anthropic and OpenAI models). Core ML then deploys optimized models across CPU, GPU, and Neural Engine. This is your pipeline for taking trained models into apps. <em>And as Phase C of your project shows, you can train tabular models entirely in Swift using Create ML's <code>MLRegressor</code> and <code>MLClassifier</code>.</em></p>
+</div>
+
+<div class="card card-green">
+  <div class="card-title">🟢 CompuFlair's Physics-Inspired ML</div>
+  <p style="margin-bottom:0">Covers Chapters 1–11 from linear regression through CNNs, all grounded in the <em>P = e<sup>−F</sup>/Z</em> framework. The Kaggle House Prices project (Ch1) is your recommended starting point — freely accessible and perfectly suited for the Python → Swift bridge. The locked "PartyTime Projects" (fraud detection, Bitcoin prediction, customer segmentation) follow the same pattern and each maps to a physics dual you'll have already internalized.</p>
+</div>
+
+<div class="card card-green">
+  <div class="card-title">🟢 MLX (Recommended Addition)</div>
+  <p style="margin-bottom:0">Apple's MLX is purpose-built for Apple Silicon, supports lazy evaluation and unified memory, and lets you fine-tune LLMs locally. <code>pip install mlx</code> and you're running. MLX also has a full <strong>Swift API</strong> — including neural network and optimizer packages — so when you reach CompuFlair Ch10–11 (feedforward and convolutional neural networks), you can train them <em>in Swift</em> using MLX Swift with GPU acceleration on your M1.</p>
+</div>
+
+<div class="card card-amber">
+  <div class="card-title">🟡 Mojo — Wait and Watch</div>
+  <p style="margin-bottom:0">Mojo's Apple Silicon GPU support exists but remains limited to basic kernels. The MAX framework (needed for actual model training) doesn't run on Apple GPUs yet. Revisit in late 2026. For learning GPU programming concepts, it's educational; for productively training ML models on your M1 today, it's not ready.</p>
+</div>
+
+<!-- ============================================ -->
+<h2 id="roadmap">Recommended Roadmap</h2>
+
+<div class="diagram-container">
+<svg width="740" height="530" viewBox="0 0 740 530">
+  <text x="370" y="28" text-anchor="middle" fill="#6c8aff" font-size="14" font-weight="600">ML Learning Roadmap on Your M1 iMac</text>
+
+  <!-- Phase 1 -->
+  <rect x="30" y="50" width="680" height="98" rx="10" fill="rgba(52,211,153,0.08)" stroke="#34d399" stroke-width="1.5"/>
+  <text x="50" y="74" fill="#34d399" font-size="12" font-weight="600">PHASE 1: Classical ML Foundations (Weeks 1–6)</text>
+  <text x="50" y="96" fill="#e4e6ed" font-size="11">• CompuFlair Ch1–6 → Linear/Logistic Regression, SVM, Decision Trees</text>
+  <text x="50" y="114" fill="#e4e6ed" font-size="11">• Tools: scikit-learn, pandas, matplotlib &nbsp;|&nbsp; Hardware: M1 CPU (plenty fast)</text>
+  <text x="50" y="132" fill="#9ba1b5" font-size="10" font-style="italic">★ House Prices project (Phase A): Train Ridge model, export .mlmodel</text>
+  <text x="50" y="142" fill="#9ba1b5" font-size="10" font-style="italic">   Claude Code helps: explain physics duals, debug code, generate visualizations</text>
+
+  <line x1="370" y1="148" x2="370" y2="168" stroke="#2d3250" stroke-width="1.5"/>
+  <polygon points="365,165 375,165 370,173" fill="#2d3250"/>
+
+  <!-- Phase 2 -->
+  <rect x="30" y="175" width="680" height="98" rx="10" fill="rgba(248,113,113,0.08)" stroke="#f87171" stroke-width="1.5"/>
+  <text x="50" y="199" fill="#f87171" font-size="12" font-weight="600">PHASE 2: Swift Bridge (Weeks 7–8)</text>
+  <text x="50" y="221" fill="#e4e6ed" font-size="11">• Import .mlmodel into Xcode → build SwiftUI prediction app</text>
+  <text x="50" y="239" fill="#e4e6ed" font-size="11">• Tools: Xcode, SwiftUI, Core ML &nbsp;|&nbsp; Hardware: M1 CPU + Neural Engine</text>
+  <text x="50" y="257" fill="#9ba1b5" font-size="10" font-style="italic">★ House Prices project (Phase B+C): Deploy in Swift, then retrain entirely in Swift</text>
+  <text x="50" y="267" fill="#9ba1b5" font-size="10" font-style="italic">   Claude Code helps: Swift syntax, SwiftUI layout, Core ML integration</text>
+
+  <line x1="370" y1="273" x2="370" y2="293" stroke="#2d3250" stroke-width="1.5"/>
+  <polygon points="365,290 375,290 370,298" fill="#2d3250"/>
+
+  <!-- Phase 3 -->
+  <rect x="30" y="300" width="680" height="88" rx="10" fill="rgba(108,138,255,0.08)" stroke="#6c8aff" stroke-width="1.5"/>
+  <text x="50" y="324" fill="#6c8aff" font-size="12" font-weight="600">PHASE 3: Unsupervised &amp; Dimensionality (Weeks 9–12)</text>
+  <text x="50" y="346" fill="#e4e6ed" font-size="11">• CompuFlair Ch7–9 → K-Means, Hierarchical Clustering, PCA/UMAP</text>
+  <text x="50" y="364" fill="#e4e6ed" font-size="11">• Tools: scikit-learn, UMAP-learn &nbsp;|&nbsp; Hardware: M1 CPU</text>
+  <text x="50" y="380" fill="#9ba1b5" font-size="10" font-style="italic">Kaggle projects: Customer Segmentation, UCI Cars clustering</text>
+
+  <line x1="370" y1="388" x2="370" y2="408" stroke="#2d3250" stroke-width="1.5"/>
+  <polygon points="365,405 375,405 370,413" fill="#2d3250"/>
+
+  <!-- Phase 4 -->
+  <rect x="30" y="415" width="680" height="88" rx="10" fill="rgba(167,139,250,0.08)" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="50" y="439" fill="#a78bfa" font-size="12" font-weight="600">PHASE 4: Neural Networks on GPU (Weeks 13–18)</text>
+  <text x="50" y="461" fill="#e4e6ed" font-size="11">• CompuFlair Ch10–11 → Feedforward &amp; CNNs — train on M1 GPU</text>
+  <text x="50" y="479" fill="#e4e6ed" font-size="11">• Tools: MLX (Python + Swift) &nbsp;|&nbsp; Hardware: M1 GPU via Metal</text>
+  <text x="50" y="495" fill="#9ba1b5" font-size="10" font-style="italic">MLX Swift for MNIST training; Create ML for no-code experiments; LLM fine-tuning with MLX-LM</text>
+</svg>
+</div>
+
+<!-- ============================================ -->
+<div class="verdict" id="verdict">
+<h2>The Verdict</h2>
+
+<p><strong>Go for it.</strong> Your M1 iMac paired with Claude Code, Xcode, and CompuFlair's physics-inspired curriculum is a genuinely strong setup for learning and practicing ML. The CompuFlair bootcamp's classical ML content doesn't need a beefy GPU at all — it needs understanding, and the physics framework delivers that beautifully.</p>
+
+<p>Start with the <strong>Kaggle House Prices project</strong> (CompuFlair Ch1) — train in Python, bridge to Swift via <code>coremltools</code>, then retrain entirely in Swift with Create ML. This single project teaches you scikit-learn, the physics of Gaussian priors, Core ML export, SwiftUI app development, and Create ML's native training — all on the same dataset, with deepening Apple integration at each phase.</p>
+
+<p>When you're ready to push into neural networks (CompuFlair Ch10–11), add MLX to your toolkit — it's Apple's best bet for on-device ML and it has a complete Swift API. For anything requiring serious transformer training, use a cloud GPU rather than waiting for Mojo to catch up on Metal.</p>
+
+<p>One more thing: your Mac SE from 1987 had a 7.83 MHz Motorola 68000 and 1 MB of RAM. Your M1 iMac's GPU alone has roughly <strong>5 million times</strong> the raw throughput. The compact Mac spirit lives on — you're just teaching it to learn now.</p>
+</div>
+
+<div class="footer">
+  Revised Edition — Generated March 9, 2026 &nbsp;|&nbsp; Based on current framework releases, benchmark data, community reports, and CompuFlair curriculum.
+</div>
+
+</div>
+</body>
+</html>

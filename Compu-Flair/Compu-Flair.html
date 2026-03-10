@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CompuFlair-Inspired Portfolio Plan for SamKirk.com</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b1020;
+      --bg-alt: #12172a;
+      --fg: #f4f5ff;
+      --fg-soft: #c8c9e5;
+      --accent: #4fd1c5;
+      --accent-soft: #285e61;
+      --accent-2: #a855f7;
+      --border: #2d3552;
+      --code-bg: #111827;
+      --card-radius: 10px;
+      --shadow-soft: 0 16px 40px rgba(0,0,0,0.45);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+      color: var(--fg);
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 16px 40px;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    h1, h2, h3, h4 {
+      font-weight: 650;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.25rem;
+    }
+    h2 {
+      font-size: 1.1rem;
+      margin-top: 2.2rem;
+      margin-bottom: 0.6rem;
+    }
+    h3 {
+      font-size: 0.95rem;
+      margin-top: 1.6rem;
+      margin-bottom: 0.4rem;
+    }
+
+    p {
+      margin: 0.3rem 0 0.7rem;
+      color: var(--fg-soft);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: linear-gradient(90deg, rgba(79,209,197,0.1), rgba(168,85,247,0.12));
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--fg-soft);
+    }
+
+    .hero {
+      margin-bottom: 2rem;
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.4fr);
+      gap: 24px;
+      align-items: center;
+    }
+    @media (max-width: 780px) {
+      .hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .hero-text p {
+      max-width: 520px;
+    }
+
+    .hero-card {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top left, rgba(79,209,197,0.12), transparent 55%),
+                  radial-gradient(circle at bottom right, rgba(168,85,247,0.16), transparent 55%),
+                  #020617;
+      box-shadow: var(--shadow-soft);
+      padding: 18px 16px 14px;
+    }
+
+    .tagline {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--fg-soft);
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0 0 0.4rem;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 0.6rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.55);
+      color: #e5e7eb;
+      background: rgba(15,23,42,0.9);
+    }
+
+    .section-card {
+      border-radius: var(--card-radius);
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top left, rgba(79,209,197,0.04), transparent 60%),
+                  #020617;
+      padding: 16px 16px 14px;
+      margin-bottom: 1.1rem;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+
+    .section-card h2 {
+      margin-top: 0.1rem;
+    }
+
+    ul {
+      margin: 0.35rem 0 0.6rem 1.1rem;
+      padding: 0;
+      color: var(--fg-soft);
+    }
+    li {
+      margin: 0.18rem 0;
+    }
+
+    code, pre {
+      font-family: var(--mono);
+    }
+
+    pre {
+      background: var(--code-bg);
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      padding: 10px 12px;
+      font-size: 0.78rem;
+      overflow-x: auto;
+      color: #e5e7eb;
+    }
+
+    .mini-heading {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 0.2rem;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 720px) {
+      .two-col {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .label {
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #9ca3af;
+      margin-bottom: 0.25rem;
+    }
+
+    .project-title {
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    .pill-small {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.6);
+      font-size: 0.67rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+      margin-right: 0.3rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .svg-wrap {
+      margin: 10px 0 4px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(148,163,184,0.4);
+      background: radial-gradient(circle at top, #0f172a 0, #020617 70%);
+    }
+
+    .references {
+      margin-top: 1.8rem;
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: rgba(15,23,42,0.6);
+      border: 1px solid rgba(148,163,184,0.3);
+    }
+
+    .references h3 {
+      font-size: 0.85rem;
+      margin-top: 0;
+      margin-bottom: 0.6rem;
+      color: #94a3b8;
+    }
+
+    .references ul {
+      margin: 0;
+      padding-left: 1.2rem;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+
+    .references li {
+      margin-bottom: 0.4rem;
+    }
+
+    footer {
+      margin-top: 2.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px dashed rgba(148,163,184,0.4);
+      font-size: 0.72rem;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-text">
+      <div class="pill">
+        <span>CompuFlair × SamKirk.com</span>
+      </div>
+      <h1>Physics‑Inspired ML Portfolio Plan</h1>
+      <p>
+        This document resolves your quandary about how to use
+        CompuFlair's physics‑based ML material to design <strong>two</strong>
+        showcase projects for your <a href="https://samkirk.com" target="_blank" rel="noopener noreferrer">samkirk.com</a>
+        portfolio—one grounded in their official Python syllabus and one
+        based on an undeveloped YouTube idea, both re‑implemented in a
+        modern compiled language.
+      </p>
+    </div>
+
+    <aside class="hero-card" aria-label="High-level summary">
+      <div class="tagline">Snapshot</div>
+      <div class="hero-title">Two flagship projects, one coherent story</div>
+      <p style="font-size:0.83rem;">
+        You'll (1) port a concrete CompuFlair project from Python to Rust/Mojo,
+        and (2) turn one of their physics‑first YouTube ideas into a small,
+        active‑inference‑inspired experiment, documented with the Dylan Davis
+        "50+ method" style notes.
+      </p>
+      <div class="badge-row">
+        <span class="badge">GenAI engineering</span>
+        <span class="badge">Physics‑inspired ML</span>
+        <span class="badge">Rust / Mojo</span>
+        <span class="badge">Portfolio‑ready</span>
+      </div>
+    </aside>
+  </section>
+
+  <!-- 1. RECAP OF CONTEXT -->
+  <section class="section-card" id="context">
+    <h2>1. Context from this conversation</h2>
+    <p>
+      You've been exploring CompuFlair's ecosystem: a 6‑month ML bootcamp aimed
+      at physicists and other quantitatively trained people, organized around a
+      physics‑inspired ML curriculum, a set of "PartyTime" and advanced Google
+      Colab projects, and YouTube videos that connect ML concepts to physics.
+    </p>
+    <p>
+      We found that the <strong>bootcamp</strong> itself costs about 200&nbsp;USD per
+      month and adds structure, mentoring, and career support, but the core
+      course materials—videos, written notes, and Colab notebooks—are publicly
+      accessible, so you can work through them for free using Colab's free tier.
+    </p>
+    <p>
+      You highlighted two especially tantalizing CompuFlair videos:
+      <em>"What is &ldquo;neural entropy&rdquo; in physics‑based diffusion models?"</em>
+      and <em>"This physics idea might be the next generation of machine learning"</em>,
+      which gestures toward active inference but offers no direct implementation
+      or references.
+    </p>
+    <p>
+      At the same time, you've invested in a gen‑AI‑heavy workflow (Claude Code,
+      the Dylan Davis "50+/3 document" method) and you maintain
+      <a href="https://github.com/MrBesterTester/samkirk.com-v3" target="_blank" rel="noopener noreferrer">samkirk.com‑v3</a>,
+      which showcases explorations and notes in a structured way.
+      Your quandary is:
+    </p>
+    <ul>
+      <li>Doing the standard CompuFlair course projects feels achievable, even "easy," with your current tools.</li>
+      <li>But you want portfolio pieces that are both challenging and meaningful, not just straightforward textbook exercises.</li>
+      <li>You also want to signal modern language skills (e.g., Rust or Mojo), not only Python or Colab.</li>
+    </ul>
+  </section>
+
+  <!-- 2. OVERVIEW OF COMPULFLAIR PHYSICS-INSPIRED ML SYLLABUS -->
+  <section class="section-card" id="compuflair-syllabus">
+    <h2>2. CompuFlair's physics‑inspired ML syllabus (relevant parts)</h2>
+    <p>
+      The physics‑inspired ML / "ML for Physicists" program is structured as:
+      (1) watch ML‑for‑Physicists videos, (2) work through Colab "Course"
+      notebooks, and (3) build "PartyTime" then "Advanced" projects suitable
+      for deployment and a job portfolio.
+    </p>
+    <p>
+      For classical ML topics, the program lists chapter‑aligned projects like
+      Kaggle House Prices, PM2.5 prediction, movie recommendation, credit card
+      fraud detection, vehicle detection from dashcams, Bitcoin price prediction,
+      and customer segmentation, each with a "Like a Pro" advanced variant.
+    </p>
+
+    <div class="svg-wrap" aria-label="Syllabus Diagram">
+      <!-- Simple SVG showing 3-layer roadmap -->
+      <svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gradBg" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#22c55e" stop-opacity="0.1" />
+            <stop offset="100%" stop-color="#6366f1" stop-opacity="0.16" />
+          </linearGradient>
+          <linearGradient id="gradNode" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4fd1c5" stop-opacity="0.9" />
+            <stop offset="100%" stop-color="#22c55e" stop-opacity="0.9" />
+          </linearGradient>
+        </defs>
+        <rect x="0.5" y="0.5" width="519" height="139" rx="14" ry="14"
+              fill="url(#gradBg)" stroke="#1e293b" stroke-width="1"/>
+        <!-- Arrows -->
+        <line x1="110" y1="70" x2="215" y2="70" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowHead)" />
+        <line x1="305" y1="70" x2="410" y2="70" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowHead)" />
+        <defs>
+          <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+          </marker>
+        </defs>
+        <!-- Nodes -->
+        <g transform="translate(30,30)">
+          <rect x="0" y="0" width="120" height="80" rx="10" ry="10"
+                fill="#020617" stroke="#334155" stroke-width="1.1"/>
+          <circle cx="24" cy="24" r="10" fill="url(#gradNode)"/>
+          <text x="42" y="28" fill="#e5e7eb" font-family="system-ui, sans-serif" font-size="11" font-weight="600">
+            Videos &amp; Notes
+          </text>
+          <text x="12" y="53" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">
+            ML for Physicists
+          </text>
+          <text x="12" y="68" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">
+            (YouTube + articles)
+          </text>
+        </g>
+        <g transform="translate(190,30)">
+          <rect x="0" y="0" width="140" height="80" rx="10" ry="10"
+                fill="#020617" stroke="#334155" stroke-width="1.1"/>
+          <circle cx="24" cy="24" r="10" fill="url(#gradNode)"/>
+          <text x="42" y="28" fill="#e5e7eb" font-family="system-ui, sans-serif" font-size="11" font-weight="600">
+            Colab Courses
+          </text>
+          <text x="12" y="53" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">
+            Physics‑inspired ML
+          </text>
+          <text x="12" y="68" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">
+            per‑chapter notebooks
+          </text>
+        </g>
+        <g transform="translate(360,30)">
+          <rect x="0" y="0" width="140" height="80" rx="10" ry="10"
+                fill="#020617" stroke="#334155" stroke-width="1.1"/>
+          <circle cx="24" cy="24" r="10" fill="url(#gradNode)"/>
+          <text x="42" y="28" fill="#e5e7eb" font-family="system-ui, sans-serif" font-size="11" font-weight="600">
+            Projects
+          </text>
+          <text x="12" y="53" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">
+            PartyTime &amp; Advanced
+          </text>
+          <text x="12" y="68" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">
+            portfolio‑ready builds
+          </text>
+        </g>
+      </svg>
+    </div>
+
+    <p>
+      For your purposes, any of these classical‑ML projects is a great "anchor"
+      you can faithfully reproduce, then enhance in a compiled language.
+    </p>
+  </section>
+
+  <!-- 3. PROJECT A: PORT A SYLLABUS PROJECT -->
+  <section class="section-card" id="project-a">
+    <h2>3. Project A – Port a syllabus project to Rust/Mojo</h2>
+    <p>
+      For a clear, well‑bounded first piece, I recommend using the
+      <strong>Kaggle House Prices</strong> "PartyTime" and "Like a Pro"
+      projects from Chapter 1 (linear regression) as your base, and then
+      porting the full workflow into Rust (or Mojo), with a small web UI.
+    </p>
+
+    <div class="two-col">
+      <div>
+        <div class="label">Chosen CompuFlair source</div>
+        <div class="project-title">Chapter 1 – Linear Regression: Kaggle House Prices</div>
+        <p>
+          According to the physics‑inspired ML roadmap, this is the first paired
+          project: a PartyTime notebook followed by an advanced, production‑style
+          version ("Like a Pro").
+        </p>
+        <ul>
+          <li>Input: tabular housing features and sale prices.</li>
+          <li>Model: linear regression (likely with regularization as an extension).</li>
+          <li>Outcome: a working predictor plus storytelling around the physics analogy (e.g., least squares as minimizing "energy").</li>
+        </ul>
+      </div>
+      <div>
+        <div class="label">Your new portfolio framing</div>
+        <p>
+          Title on samkirk.com: <strong>"From Energy Minimization to Prices: Physics‑Flavored Regression in Rust"</strong>.
+        </p>
+        <ul>
+          <li>Show that you understand the original Python/Colab implementation.</li>
+          <li>Highlight the Rust (or Mojo) re‑implementation with strong type safety and performance.</li>
+          <li>Add a minimal web interface to make the project tangible.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>3.1 Recommended tech stack and scope</h3>
+    <p>
+      To keep the project technically satisfying but not unwieldy, scope it as a
+      full vertical slice: data prep, model training, and a small UI, with the
+      Python version as a "spec."
+    </p>
+    <ul>
+      <li><strong>Language:</strong> Rust for the production‑grade version; optionally Mojo for a second, high‑performance prototype.</li>
+      <li><strong>ML implementation:</strong> implement linear regression from scratch (closed‑form solution or gradient descent) in Rust first, then optionally compare to a Rust ML crate.</li>
+      <li><strong>Interface:</strong> small web UI (e.g., using a Rust web framework) where a user can tweak a few key features and see predicted price and "energy."</li>
+    </ul>
+
+    <h3>3.2 How to use your Dylan Davis "50+ method" here</h3>
+    <p>
+      You mentioned the Dylan Davis "50+/3‑document" technique that you've
+      documented in your site repo; this is a natural way to clarify the spec
+      before coding and to make the process itself part of the artifact.
+    </p>
+    <p>
+      For Project A, consider three core documents in your GitHub repo and
+      link them from the project page:
+    </p>
+    <ul>
+      <li>
+        <em>Requirements &amp; physics story:</em> what CompuFlair's version does, how
+        linear regression connects to energy minimization, and what your Rust
+        port must preserve.
+      </li>
+      <li>
+        <em>Design &amp; language translation notes:</em> how to map the Python/NumPy
+        idioms into Rust's ownership and type system; what crates you chose and
+        why.
+      </li>
+      <li>
+        <em>Post‑mortem &amp; comparison:</em> benchmarks, ergonomics comparison
+        (Python vs Rust vs Mojo), and what you'd reuse in future gen‑AI
+        projects.
+      </li>
+    </ul>
+  </section>
+
+  <!-- 4. PROJECT B: VIDEO-BASED NEURAL ENTROPY/ACTIVE INFERENCE MINI-PROJECT -->
+  <section class="section-card" id="project-b">
+    <h2>4. Project B – Turn a YouTube idea into a non‑Python mini‑lab</h2>
+    <p>
+      For the more original, "tantalizing" piece, I suggest you build a
+      compact experiment around CompuFlair's video
+      <em>"This physics idea might be the next generation of machine learning"</em>
+      (which gestures toward active inference and the free‑energy principle),
+      supported by a relatively lightweight, tutorial‑style paper.
+    </p>
+    <p>
+      To keep it tractable, we'll narrow it to a minimal active‑inference‑like
+      agent in 1D with a Rust or Mojo implementation, instead of a full
+      diffusion model or large‑scale system.
+    </p>
+
+    <div class="mini-heading">Chosen references</div>
+    <ul>
+      <li>
+        CompuFlair video:
+        <em>"This physics idea might be the next generation of machine learning"</em>
+        (physics‑first framing, no code).
+      </li>
+      <li>
+        Conceptual reference:
+        <em>"A step‑by‑step tutorial on active inference and its application to…"</em>,
+        which walks through the basics of active inference and the free‑energy
+        principle in a relatively accessible way.
+      </li>
+    </ul>
+
+    <h3>4.1 Project concept: 1D active‑inference‑style agent</h3>
+    <p>
+      Instead of implementing a full, modern active‑inference stack, your goal is
+      to code a small agent that:
+    </p>
+    <ul>
+      <li>Lives on a 1D line with a simple state (e.g., position).</li>
+      <li>Has a preferred state distribution (e.g., "likes" to stay near the center).</li>
+      <li>Perceives noisy observations and chooses actions that minimize a simple free‑energy‑like objective (surprise relative to its preferences).</li>
+    </ul>
+    <p>
+      You then relate this to CompuFlair's "physics idea" by explicitly mapping
+      your cost function back to a free‑energy or entropy interpretation, even if
+      in simplified form.
+    </p>
+
+    <div class="svg-wrap" aria-label="Agent Diagram">
+      <!-- Simple diagram of 1D line with agent and preferred region -->
+      <svg viewBox="0 0 520 120" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="prefRegion" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#22c55e" stop-opacity="0.15" />
+            <stop offset="100%" stop-color="#22c55e" stop-opacity="0.02" />
+          </linearGradient>
+        </defs>
+        <rect x="0.5" y="0.5" width="519" height="119" rx="12" ry="12"
+              fill="#020617" stroke="#1f2937"/>
+        <!-- 1D line -->
+        <line x1="40" y1="70" x2="480" y2="70" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+        <!-- preferred region -->
+        <rect x="210" y="52" width="100" height="36" rx="6" ry="6"
+              fill="url(#prefRegion)" stroke="#16a34a" stroke-dasharray="4,4" stroke-width="1"/>
+        <!-- agent -->
+        <circle cx="120" cy="70" r="10" fill="#4fd1c5" stroke="#0f766e" stroke-width="1.5"/>
+        <path d="M 120 52 L 120 40" stroke="#4fd1c5" stroke-width="1.3" stroke-linecap="round"/>
+        <polygon points="116,40 124,40 120,32" fill="#4fd1c5" />
+        <!-- text -->
+        <text x="60" y="38" fill="#e5e7eb" font-family="system-ui, sans-serif" font-size="11">
+          Agent
+        </text>
+        <text x="225" y="46" fill="#bbf7d0" font-family="system-ui, sans-serif" font-size="11">
+          Preferred state region
+        </text>
+        <text x="60" y="98" fill="#9ca3af" font-family="system-ui, sans-serif" font-size="10">
+          Actions move along the line; agent minimizes "surprise"
+        </text>
+      </svg>
+    </div>
+
+    <h3>4.2 Implementation scope in Rust/Mojo</h3>
+    <p>
+      A reasonable scope that remains portfolio‑ready but not overwhelming:
+    </p>
+    <ul>
+      <li>
+        Implement the agent's generative model and recognition model in Rust:
+        a simple Gaussian belief over state with a prior centered at the preferred
+        region; observations are noisy positions.
+      </li>
+      <li>
+        Define a free‑energy‑like objective (e.g., negative log likelihood +
+        KL term to the preferred distribution), and implement gradient‑based
+        updates to beliefs and/or actions per time‑step.
+      </li>
+      <li>
+        Provide a tiny visualization (text‑mode plot in the terminal or a basic
+        HTML/SVG output) showing how the agent moves over time toward its
+        preferred region under noise.
+      </li>
+      <li>
+        Optionally, provide a Mojo version to emphasize your comfort with
+        experimental high‑performance languages.
+      </li>
+    </ul>
+
+    <h3>4.3 How you credit and connect to CompuFlair</h3>
+    <p>
+      On the project page, you can:
+    </p>
+    <ul>
+      <li>
+        Link directly to the CompuFlair video
+        <em>"This physics idea might be the next generation of machine learning"</em>
+        and clearly state that you are providing one possible implementation
+        inspired by its narrative, not an official CompuFlair codebase.
+      </li>
+      <li>
+        Cite the active‑inference tutorial and free‑energy principle papers you
+        leaned on, such as the step‑by‑step tutorial and foundational FEP
+        documents.
+      </li>
+      <li>
+        Explain where you simplified the math and why (e.g., 1D state, simple
+        Gaussian beliefs), making the project approachable but still principled.
+      </li>
+    </ul>
+  </section>
+
+  <!-- 5. HOW THIS FITS SAMKIRK.COM EXPLORATIONS -->
+  <section class="section-card" id="samkirk">
+    <h2>5. How these fit your samkirk.com "Explorations"</h2>
+    <p>
+      Your <a href="https://github.com/MrBesterTester/samkirk.com-v3" target="_blank" rel="noopener noreferrer">samkirk.com‑v3 repo</a>
+      shows that you already treat your site as a living, versioned portfolio,
+      with documentation and explorations organized alongside the code.
+      These two projects plug directly into that style.
+    </p>
+    <p>
+      They also show a nice gradient of difficulty:
+      Project A is "faithful translation + engineering polish," while
+      Project B is "research‑adjacent interpretation + simplified physics
+      model," which aligns well with your goal of doing something both
+      challenging and meaningful.
+    </p>
+
+    <div class="two-col">
+      <div>
+        <div class="mini-heading">Explorations page entries</div>
+        <ul>
+          <li>
+            <strong>Exploration:</strong> Physics‑Flavored Regression in Rust<br />
+            <em>Taglines:</em> "CompuFlair Chapter 1, reimagined in a compiled language."
+          </li>
+          <li>
+            <strong>Exploration:</strong> A Tiny Active‑Inference Agent in Rust<br />
+            <em>Taglines:</em> "Inspired by CompuFlair's 'next‑gen ML' video and FEP literature."
+          </li>
+        </ul>
+      </div>
+      <div>
+        <div class="mini-heading">Cross‑linking strategy</div>
+        <ul>
+          <li>
+            Link from each project back to the relevant CompuFlair page or
+            video and the academic references, so readers can trace lineage.
+          </li>
+          <li>
+            From your site's home or "About" page, group these under a
+            "Physics‑Inspired ML &amp; Gen‑AI Engineering" cluster to emphasize a coherent theme.
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. SUGGESTED EXECUTION ORDER -->
+  <section class="section-card" id="execution">
+    <h2>6. Suggested execution order</h2>
+    <p>
+      To reduce context‑switching and keep each project shippable, you can use
+      this sequence:
+    </p>
+    <ol style="margin-left:1.1rem;color:var(--fg-soft);">
+      <li>
+        Reproduce the Kaggle House Prices notebook in Python (briefly, with help
+        from Claude / the 50+ method) to ensure you match CompuFlair's spirit.
+      </li>
+      <li>
+        Implement the Rust version with a minimal web UI and documentation, then
+        publish the project and an "Exploration" entry.
+      </li>
+      <li>
+        Outline the 1D active‑inference agent based on the CompuFlair video and
+        the step‑by‑step tutorial; write your three 50+ documents first.
+      </li>
+      <li>
+        Implement the Rust agent, generate a small SVG‑based visualization, and
+        publish as your second Exploration.
+      </li>
+    </ol>
+    <p>
+      Throughout, you can leverage Claude Code to generate scaffolding and
+      refactorations, but the novelty and value lie in your choice of problems,
+      language, and the careful documentation that makes the physics and ML
+      connections explicit.
+    </p>
+  </section>
+
+  <!-- REFERENCES -->
+  <section class="references">
+    <h3>Key References</h3>
+    <ul>
+      <li>CompuFlair Physics-Inspired ML program: <a href="https://compu-flair.com/physics-inspired-ml/" target="_blank" rel="noopener noreferrer">https://compu-flair.com/physics-inspired-ml/</a></li>
+      <li>CompuFlair Bootcamp information: <a href="https://compu-flair.com/bootcamp/" target="_blank" rel="noopener noreferrer">https://compu-flair.com/bootcamp/</a></li>
+      <li>CompuFlair YouTube channel: <a href="https://www.youtube.com/@CompuFlair" target="_blank" rel="noopener noreferrer">https://www.youtube.com/@CompuFlair</a></li>
+      <li>"What is neural entropy in physics-based diffusion models?" video: <a href="https://www.youtube.com/watch?v=CJGVsZAMtyI" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=CJGVsZAMtyI</a></li>
+      <li>"This physics idea might be the next generation of machine learning" video: <a href="https://www.youtube.com/watch?v=MqDdYybN8o0" target="_blank" rel="noopener noreferrer">https://www.youtube.com/watch?v=MqDdYybN8o0</a></li>
+      <li>Smith et al., "A step-by-step tutorial on active inference" (2021): <a href="https://www.semanticscholar.org/paper/A-Step-by-Step-Tutorial-on-Active-Inference-and-its-Smith-Friston/16aef42d9b453dad02a7aba7" target="_blank" rel="noopener noreferrer">Semantic Scholar</a></li>
+      <li>"Active inference: demystified and compared" tutorial paper: <a href="https://activeinference.github.io/papers/sajid.pdf" target="_blank" rel="noopener noreferrer">PDF</a></li>
+      <li>Your samkirk.com-v3 repository: <a href="https://github.com/MrBesterTester/samkirk.com-v3" target="_blank" rel="noopener noreferrer">https://github.com/MrBesterTester/samkirk.com-v3</a></li>
+      <li>Google Colab pricing details: <a href="https://colab.research.google.com/signup" target="_blank" rel="noopener noreferrer">https://colab.research.google.com/signup</a></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>
+      <strong>Document created:</strong> March 2, 2026<br />
+      This plan synthesizes information from CompuFlair's publicly accessible materials,
+      academic papers on active inference and the free energy principle, and your existing
+      portfolio structure to provide actionable project recommendations.
+    </p>
+  </footer>
+
+</main>
+</body>
+</html>
