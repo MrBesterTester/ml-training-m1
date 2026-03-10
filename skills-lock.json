@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "do-work": {
+      "source": "bladnman/do-work",
+      "sourceType": "github",
+      "computedHash": "1c6ed5a3a77966838f2692b8be61114a30970411b096ab20f43f6bb315153dac"
+    }
+  }
+}
