@@ -26,6 +26,11 @@ venv/
 # Node
 node_modules/
 
+# ML models (large binary files)
+models/
+
+# do-work transient files
+do-work/working/
+
 # Misc
 *.log
-.claude/
