@@ -24,12 +24,17 @@ Use the topic taxonomy to generate complete instruction/response pairs (200-500)
 - Generate 200-500 Q&A pairs across all topic categories
 - Write to data/full_dataset.jsonl in Alpaca format: `{"instruction": "...", "input": "", "output": "..."}`
 - Instructions should be specific scenarios, not generic
+- **Responses MUST follow the CompuFlair-inspired physics-first explanatory style:**
+  - Ground explanations in underlying physics (transmission line theory, thermodynamics, circuit theory, EM fields, information theory, etc.)
+  - Explain *why* things work/fail in terms of physical mechanisms, not just *what* to do
+  - Include relevant equations, constants, or physical relationships where natural
+  - Use the physics mappings from Step 2.1 to ensure each topic references its core principles
 - Responses should be detailed (100-300 words), practical, and structured
 - Include specifics: signal names, protocols, tool names, measurement values where appropriate
 
 ## Verification
 
-- File contains 200-500 valid JSONL entries, spot-check 5
+- File contains 200-500 valid JSONL entries, spot-check 5 for physics grounding
 
 ## Blueprint Context
 
@@ -41,7 +46,7 @@ Steps:
 3. Write all pairs to data/full_dataset.jsonl in Alpaca format
 4. Print summary: total count, per-category count, avg response length
 
-Context: We need the responses to be detailed, specific, and technically sound — the kind of answers a senior hardware test engineer would give. The responses should be 100-300 words each, practical and actionable.
+Context: We need the responses to be detailed, specific, and technically sound — the kind of answers a physicist-engineer would give. The responses should be 100-300 words each, practical and actionable, but **grounded in physics**: explanations should tie practical steps back to underlying physical principles (transmission line theory, thermodynamics, circuit theory, EM field theory, information theory, etc.). This CompuFlair-inspired style is what makes the fine-tuned model distinctive.
 
 Test: data/full_dataset.jsonl exists, contains 200-500 valid JSON lines, each with instruction/input/output keys. Spot-check 5 random entries for quality.
 

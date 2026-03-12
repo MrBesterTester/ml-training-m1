@@ -35,8 +35,23 @@ The training dataset covers hardware test engineering topics including but not l
 - Production test optimization
 - Environmental and stress testing
 
+### Explanatory Style: Physics-First (CompuFlair-Inspired)
+
+Responses in the training dataset should adopt a **physics-based explanatory style** inspired by CompuFlair's approach to teaching through physics analogies. Rather than giving purely procedural answers, the model should ground its explanations in the underlying physics and engineering principles:
+
+- **Signal integrity** → electromagnetic wave propagation, transmission line theory, impedance matching
+- **Thermal testing** → thermodynamics, heat transfer, thermal resistance models
+- **ICT measurements** → circuit theory (Kirchhoff's laws, Ohm's law, impedance)
+- **Boundary scan timing** → signal propagation delay, clock domain crossing
+- **ESD/EMI testing** → Maxwell's equations, field theory, shielding effectiveness
+- **Fault isolation** → statistical mechanics analogies, root cause as energy minimization
+- **Test coverage** → information theory, entropy as a measure of test completeness
+
+This style makes the fine-tuned model genuinely distinctive: not just "knows more about hardware diagnostics" but "explains hardware diagnostics the way a physicist-engineer would." The goal is a model that teaches *why* things work (or fail), not just *what* to do.
+
 ### Dataset Approach
 - AI-generated Q&A pairs based on publicly available domain knowledge and web resources
+- **Physics-grounded responses** — each answer ties practical steps back to underlying physical principles
 - Formatted as instruction/response pairs (Alpaca-style JSONL)
 - Sam reviews and approves all training data before use
 - Target: 200-500 pairs
@@ -48,7 +63,7 @@ The training dataset covers hardware test engineering topics including but not l
 {
   "instruction": "A boundary scan test is passing on the bench but failing intermittently in production. What diagnostic steps would you take?",
   "input": "",
-  "output": "First, check environmental differences between bench and production. Boundary scan is sensitive to signal integrity: (1) Compare TCK frequencies — production lines sometimes run faster clocks. (2) Check cable lengths and impedance — bench setups often have shorter, better-shielded JTAG cables. (3) Examine power supply noise — production environments can have more EMI. (4) Consider temperature differences. Capture the failing scan chain data and compare bit-by-bit to passing bench data to identify which cells are failing, then work backward to the physical cause."
+  "output": "This is fundamentally a signal integrity problem — the digital signals in the JTAG chain are electromagnetic waves governed by transmission line physics. First, check TCK frequencies: production lines sometimes run faster clocks, and when rise times approach the propagation delay of the trace (τ = length / v, where v ≈ 6 in/ns for FR4), reflections corrupt the signal. (1) Compare cable lengths and impedance — bench setups often have shorter, better-shielded JTAG cables. Longer cables increase round-trip delay and are more susceptible to impedance mismatches that cause reflections (Γ = (Z_L - Z_0)/(Z_L + Z_0)). (2) Examine power supply noise — production environments generate more EMI, which couples into the scan chain as noise. The noise margin of boundary scan cells is finite; if coupled noise exceeds V_IL or V_IH thresholds, bits flip. (3) Consider temperature — semiconductor switching thresholds shift with temperature per the Arrhenius relationship, tightening timing margins. Capture the failing scan chain data and compare bit-by-bit to passing bench data to identify which cells are failing, then work backward from the failing cell locations to the physical cause — is it a trace near a switching regulator? A connector with poor ground return?"
 }
 ```
 
@@ -90,7 +105,7 @@ The training dataset covers hardware test engineering topics including but not l
 - Training a model from scratch
 - Multi-GPU or cloud GPU training
 - Production-grade deployment infrastructure
-- The CompuFlair physics curriculum (separate learning track)
+- The CompuFlair physics curriculum itself (separate learning track — but the physics-first explanatory *style* IS in scope for the training dataset)
 - Rust or Mojo implementations
 
 ## 6. Project Structure

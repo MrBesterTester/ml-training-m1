@@ -21,17 +21,19 @@ Sam reviews the generated dataset for quality and accuracy before proceeding to 
 ## Requirements
 
 - Sam reviews data/full_dataset.jsonl for quality and accuracy
-- Flag and revise any low-quality entries
+- **Verify physics-first style:** responses should ground explanations in underlying physics, not just give procedures
+- Flag and revise any low-quality or insufficiently physics-grounded entries
 - **GATE:** Sam approves dataset before proceeding
 
 ## Verification
 
 - Sam has reviewed and approved the dataset
 - Low-quality entries have been flagged and revised
+- Physics-first explanatory style is consistent across entries
 
 ## Blueprint Context
 
-Sam reviews: Open data/full_dataset.jsonl and scan for quality. Flag any entries that are inaccurate, too generic, or low quality. Remove or revise flagged entries, then re-run the split.
+Sam reviews: Open data/full_dataset.jsonl and scan for quality. Flag any entries that are inaccurate, too generic, or low quality. Specifically verify the physics-first style — responses should connect practical advice to underlying physical principles, not just list procedures. Remove or revise flagged entries, then re-run the split.
 
 Context: The 80/20 split gives us ~160-400 training examples and ~40-100 evaluation examples. The eval set is used to compare base vs. fine-tuned model performance.
 

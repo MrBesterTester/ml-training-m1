@@ -84,36 +84,45 @@ Test: Model generates coherent text. Note the tokens/second rate — this is the
 
 **Goal:** Create a high-quality training dataset of ~200-500 hardware diagnostics Q&A pairs in Alpaca-style JSONL format, reviewed and approved by Sam.
 
-### Step 2.1 — Define Topic Taxonomy & Prompt Templates
+### Step 2.1 — Define Topic Taxonomy, Physics Mappings & Prompt Templates
 
-Before generating data, define the topics and the style of Q&A pairs we want.
+Before generating data, define the topics, map each to its underlying physics, and define the style of Q&A pairs we want.
 
-**Context:** The dataset quality determines the fine-tuning quality. We want to cover the topics listed in the spec (JTAG, boundary scan, functional test, fault isolation, etc.) with varied question types (troubleshooting scenarios, how-to, comparison, best practices).
+**Context:** The dataset quality determines the fine-tuning quality. We want to cover the topics listed in the spec (JTAG, boundary scan, functional test, fault isolation, etc.) with varied question types (troubleshooting scenarios, how-to, comparison, best practices). Critically, responses must follow the **physics-first explanatory style** (CompuFlair-inspired) — grounding practical answers in the underlying physics and engineering principles.
 
 ```
-Create a dataset generation script at scripts/generate_dataset.py that defines the topic taxonomy and Q&A generation approach.
+Create a dataset generation script at scripts/generate_dataset.py that defines the topic taxonomy, physics mappings, and Q&A generation approach.
 
 Steps:
 1. Create scripts/ directory
 2. Create scripts/generate_dataset.py with:
    - A list of ~10-15 hardware diagnostics topic categories (from the spec)
+   - For each category, a physics mapping that identifies the underlying principles:
+     * Signal integrity → transmission line theory, EM wave propagation
+     * Thermal testing → thermodynamics, heat transfer
+     * ICT → circuit theory (Kirchhoff, Ohm, impedance)
+     * Boundary scan → propagation delay, clock domains
+     * ESD/EMI → Maxwell's equations, field theory
+     * Fault isolation → statistical reasoning, energy minimization analogies
+     * Test coverage → information theory, entropy
    - For each category, define 3-4 question templates/styles:
      * Troubleshooting: "X is failing in scenario Y. How do you diagnose this?"
      * How-to: "What is the correct approach to X?"
      * Comparison: "When should you use X vs Y?"
      * Best practice: "What are the key considerations for X?"
+     * Physics-why: "Why does X happen from a physics perspective?"
    - A function that combines topics × templates to generate prompt variations
    - Output format: list of instruction strings (no responses yet)
 3. Run the script to generate and print ~20 sample prompts for review
 
-Test: The script runs and prints 20 diverse, realistic-sounding hardware diagnostics questions covering multiple topics and question styles.
+Test: The script runs and prints 20 diverse, realistic-sounding hardware diagnostics questions covering multiple topics and question styles. At least some prompts should invite physics-grounded explanations.
 ```
 
-### Step 2.2 — Generate Full Q&A Dataset
+### Step 2.2 — Generate Full Q&A Dataset (Physics-First Style)
 
-Use the topic taxonomy to generate complete instruction/response pairs and save as JSONL.
+Use the topic taxonomy and physics mappings to generate complete instruction/response pairs and save as JSONL.
 
-**Context:** We need the responses to be detailed, specific, and technically sound — the kind of answers a senior hardware test engineer would give. The responses should be 100-300 words each, practical and actionable.
+**Context:** We need the responses to be detailed, specific, and technically sound — the kind of answers a physicist-engineer would give. The responses should be 100-300 words each, practical and actionable, but **grounded in physics**: explanations should tie practical steps back to underlying physical principles (transmission line theory, thermodynamics, circuit theory, EM field theory, information theory, etc.). This CompuFlair-inspired style is what makes the fine-tuned model distinctive.
 
 ```
 Extend scripts/generate_dataset.py to generate complete Q&A pairs and write them to JSONL.
@@ -123,12 +132,16 @@ Steps:
 2. Add a bank of pre-written Q&A pairs covering each topic category. For each of the ~10-15 categories, write 15-30 Q&A pairs, targeting 200-500 total.
    - Instructions should be specific scenarios, not generic
    - Responses should be detailed (100-300 words), practical, and structured
+   - Responses MUST follow the physics-first style: connect practical advice to the underlying physics
+     * Include relevant equations, constants, or physical relationships where natural
+     * Explain *why* something works/fails in terms of physical mechanisms, not just *what* to do
+     * Use the physics mappings from Step 2.1 to ensure each topic area references its core principles
    - Include specifics: signal names, protocols, tool names, measurement values where appropriate
 3. Write all pairs to data/full_dataset.jsonl in Alpaca format:
    {"instruction": "...", "input": "", "output": "..."}
 4. Print summary: total count, per-category count, avg response length
 
-Test: data/full_dataset.jsonl exists, contains 200-500 valid JSON lines, each with instruction/input/output keys. Spot-check 5 random entries for quality.
+Test: data/full_dataset.jsonl exists, contains 200-500 valid JSON lines, each with instruction/input/output keys. Spot-check 5 random entries for quality — verify that responses ground explanations in physics, not just procedures.
 ```
 
 ### Step 2.3 — Review Dataset & Split Train/Eval

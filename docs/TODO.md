@@ -29,20 +29,24 @@
 
 ## Phase 2: Dataset Generation
 
-- [ ] **[Claude Code]** 2.1 Define topic taxonomy & prompt templates
+- [ ] **[Claude Code]** 2.1 Define topic taxonomy, physics mappings & prompt templates
   - [ ] Create scripts/ directory
-  - [ ] Create scripts/generate_dataset.py with topic categories and question templates
-  - [ ] **TEST:** Script prints ~20 diverse sample prompts
+  - [ ] Create scripts/generate_dataset.py with topic categories, physics mappings, and question templates
+  - [ ] Map each topic to underlying physics (transmission line theory, thermodynamics, circuit theory, EM fields, etc.)
+  - [ ] Include "physics-why" question template style
+  - [ ] **TEST:** Script prints ~20 diverse sample prompts; some invite physics-grounded explanations
 
-- [ ] **[Claude Code]** 2.2 Generate full Q&A dataset
+- [ ] **[Claude Code]** 2.2 Generate full Q&A dataset (physics-first style)
   - [ ] Create data/ directory
   - [ ] Generate 200-500 Q&A pairs across all topic categories
+  - [ ] Responses must follow CompuFlair-inspired physics-first explanatory style
   - [ ] Write to data/full_dataset.jsonl (Alpaca format)
-  - [ ] **TEST:** File contains 200-500 valid JSONL entries, spot-check 5
+  - [ ] **TEST:** File contains 200-500 valid JSONL entries, spot-check 5 for physics grounding
 
 - [ ] **[Sam]** 2.3 Review dataset & approve
   - [ ] Sam reviews data/full_dataset.jsonl for quality and accuracy
-  - [ ] Flag and revise any low-quality entries
+  - [ ] Verify physics-first style: responses ground explanations in underlying physics, not just procedures
+  - [ ] Flag and revise any low-quality or insufficiently physics-grounded entries
   - [ ] **GATE:** Sam approves dataset before proceeding
 
 - [ ] **[Claude Code]** 2.4 Split into train/eval
