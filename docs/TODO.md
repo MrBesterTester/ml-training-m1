@@ -36,12 +36,12 @@
   - [x] Include "physics-why" question template style
   - [x] **TEST:** Script prints ~20 diverse sample prompts; some invite physics-grounded explanations
 
-- [ ] **[Claude Code]** 2.2 Generate full Q&A dataset (physics-first style)
-  - [ ] Create data/ directory
-  - [ ] Generate 200-500 Q&A pairs across all topic categories
-  - [ ] Responses must follow CompuFlair-inspired physics-first explanatory style
-  - [ ] Write to data/full_dataset.jsonl (Alpaca format)
-  - [ ] **TEST:** File contains 200-500 valid JSONL entries, spot-check 5 for physics grounding
+- [x] **[Claude Code]** 2.2 Generate full Q&A dataset (physics-first style)
+  - [x] Create data/ directory
+  - [x] Generate 200-500 Q&A pairs across all topic categories
+  - [x] Responses must follow CompuFlair-inspired physics-first explanatory style
+  - [x] Write to data/full_dataset.jsonl (Alpaca format)
+  - [x] **TEST:** File contains 200-500 valid JSONL entries, spot-check 5 for physics grounding
 
 - [ ] **[Sam]** 2.3 Review dataset & approve
   - [ ] Sam reviews data/full_dataset.jsonl for quality and accuracy
