@@ -7,7 +7,9 @@ and underlying physics-principle mappings, five question template styles
 combinatorial generator that produces diverse training prompts for fine-tuning.
 """
 
+import json
 import random
+from collections import Counter
 from pathlib import Path
 from typing import Optional
 
@@ -302,34 +304,134 @@ def generate_prompts(seed: int = 42) -> list[dict]:
     return prompts
 
 
+def validate_dataset(pairs: list[dict]) -> list[str]:
+    """Validate Q&A pairs and return list of warnings."""
+    from qa_bank import ALL_QA_PAIRS  # noqa: F811
+
+    warnings = []
+    valid_cats = {t["name"] for t in TOPICS}
+    valid_styles = set(TEMPLATES.keys())
+
+    for i, pair in enumerate(pairs):
+        for key in ("instruction", "output", "category", "style"):
+            if key not in pair:
+                warnings.append(f"Pair {i}: missing key '{key}'")
+
+        word_count = len(pair.get("output", "").split())
+        if word_count < 100:
+            warnings.append(f"Pair {i} ({pair.get('category')}): response too short ({word_count} words)")
+        if word_count > 300:
+            warnings.append(f"Pair {i} ({pair.get('category')}): response long ({word_count} words)")
+
+        if pair.get("category") not in valid_cats:
+            warnings.append(f"Pair {i}: invalid category '{pair.get('category')}'")
+
+        if pair.get("style") not in valid_styles:
+            warnings.append(f"Pair {i}: invalid style '{pair.get('style')}'")
+
+        if not pair.get("instruction", "").strip():
+            warnings.append(f"Pair {i}: empty instruction")
+
+    if len(pairs) < 200:
+        warnings.append(f"Total pairs ({len(pairs)}) below minimum (200)")
+    if len(pairs) > 500:
+        warnings.append(f"Total pairs ({len(pairs)}) above maximum (500)")
+
+    # Check for duplicate instructions
+    seen = set()
+    for i, pair in enumerate(pairs):
+        inst = pair.get("instruction", "")
+        if inst in seen:
+            warnings.append(f"Pair {i}: duplicate instruction")
+        seen.add(inst)
+
+    return warnings
+
+
+def write_dataset(pairs: list[dict], output_path: Optional[Path] = None) -> Path:
+    """Write all Q&A pairs to JSONL in Alpaca format."""
+    if output_path is None:
+        output_path = PROJECT_ROOT / "data" / "full_dataset.jsonl"
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(output_path, "w") as f:
+        for pair in pairs:
+            record = {
+                "instruction": pair["instruction"],
+                "input": "",
+                "output": pair["output"],
+            }
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    return output_path
+
+
+def print_summary(pairs: list[dict]) -> None:
+    """Print dataset statistics."""
+    cat_counts = Counter(p["category"] for p in pairs)
+    style_counts = Counter(p["style"] for p in pairs)
+    word_counts = [len(p["output"].split()) for p in pairs]
+
+    print(f"\n{'=' * 70}")
+    print("DATASET SUMMARY")
+    print(f"{'=' * 70}")
+    print(f"  Total Q&A pairs: {len(pairs)}")
+    print(f"  Avg response length: {sum(word_counts) / len(word_counts):.0f} words")
+    print(f"  Min/Max response: {min(word_counts)}/{max(word_counts)} words")
+    print()
+    print("  Per-category counts:")
+    for cat, count in sorted(cat_counts.items()):
+        print(f"    {cat:40s} {count:3d}")
+    print()
+    print("  Per-style counts:")
+    for style, count in sorted(style_counts.items()):
+        print(f"    {style:20s} {count:3d}")
+
+
 def main() -> None:
-    """Print a diverse sample of generated prompts with summary statistics."""
-    all_prompts = generate_prompts()
+    """Generate Q&A dataset, validate, write JSONL, and print summary."""
+    from qa_bank import ALL_QA_PAIRS
 
-    # Sample 20 prompts, ensuring diversity across styles
+    # Validate
+    print("Validating Q&A pairs...")
+    warnings = validate_dataset(ALL_QA_PAIRS)
+    if warnings:
+        print(f"\n  {len(warnings)} warnings:")
+        for w in warnings:
+            print(f"    - {w}")
+    else:
+        print("  All pairs valid.")
+
+    # Write JSONL
+    output_path = write_dataset(ALL_QA_PAIRS)
+    print(f"\nDataset written to: {output_path}")
+
+    # Verify JSONL integrity
+    with open(output_path) as f:
+        lines = f.readlines()
+    print(f"  JSONL lines: {len(lines)}")
+    for i, line in enumerate(lines):
+        record = json.loads(line)
+        assert "instruction" in record and "input" in record and "output" in record, (
+            f"Line {i}: missing Alpaca keys"
+        )
+    print("  JSONL integrity: OK")
+
+    # Summary
+    print_summary(ALL_QA_PAIRS)
+
+    # Spot-check 5 random entries
     rng = random.Random(42)
-    sample = rng.sample(all_prompts, min(20, len(all_prompts)))
-
-    print(f"{'=' * 80}")
-    print("HARDWARE DIAGNOSTICS — SAMPLE PROMPTS")
-    print(f"{'=' * 80}\n")
-
-    for i, prompt in enumerate(sample, 1):
-        print(f"[{i:02d}]  style={prompt['style']}  |  category={prompt['category']}")
-        print(f"      {prompt['instruction']}")
-        print()
-
-    # Summary stats
-    categories = {p["category"] for p in all_prompts}
-    styles = {p["style"] for p in all_prompts}
-
-    print(f"{'=' * 80}")
-    print("SUMMARY")
-    print(f"{'=' * 80}")
-    print(f"  Total prompts generated : {len(all_prompts)}")
-    print(f"  Topics covered          : {len(categories)}")
-    print(f"  Styles used             : {len(styles)} — {', '.join(sorted(styles))}")
-    print(f"  Sample shown above      : {len(sample)}")
+    sample = rng.sample(ALL_QA_PAIRS, 5)
+    print(f"\n{'=' * 70}")
+    print("SPOT CHECK — 5 Random Entries")
+    print(f"{'=' * 70}")
+    for i, pair in enumerate(sample, 1):
+        print(f"\n[{i}]  category={pair['category']}  style={pair['style']}")
+        print(f"  Q: {pair['instruction'][:120]}...")
+        print(f"  A: {pair['output'][:200]}...")
+        print(f"  ({len(pair['output'].split())} words)")
 
 
 if __name__ == "__main__":

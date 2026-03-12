@@ -29,12 +29,12 @@
 
 ## Phase 2: Dataset Generation
 
-- [ ] **[Claude Code]** 2.1 Define topic taxonomy, physics mappings & prompt templates
-  - [ ] Create scripts/ directory
-  - [ ] Create scripts/generate_dataset.py with topic categories, physics mappings, and question templates
-  - [ ] Map each topic to underlying physics (transmission line theory, thermodynamics, circuit theory, EM fields, etc.)
-  - [ ] Include "physics-why" question template style
-  - [ ] **TEST:** Script prints ~20 diverse sample prompts; some invite physics-grounded explanations
+- [x] **[Claude Code]** 2.1 Define topic taxonomy, physics mappings & prompt templates
+  - [x] Create scripts/ directory
+  - [x] Create scripts/generate_dataset.py with topic categories, physics mappings, and question templates
+  - [x] Map each topic to underlying physics (transmission line theory, thermodynamics, circuit theory, EM fields, etc.)
+  - [x] Include "physics-why" question template style
+  - [x] **TEST:** Script prints ~20 diverse sample prompts; some invite physics-grounded explanations
 
 - [ ] **[Claude Code]** 2.2 Generate full Q&A dataset (physics-first style)
   - [ ] Create data/ directory
@@ -85,6 +85,7 @@
 
 - [ ] **[Claude Code]** 4.2 Write README
   - [ ] Project description and motivation
+  - [ ] **CompuFlair physics-first interpretation** — front-and-center explanation of why physics-grounded responses matter, how this settles the "I don't understand ML results" complaint, and what makes this model genuinely distinctive
   - [ ] Hardware and technical approach
   - [ ] Key results (2-3 highlighted comparisons)
   - [ ] Reproduction steps
