@@ -1,10 +1,10 @@
 """
 Hardware diagnostics topic taxonomy, question templates, and prompt generator.
 
-Defines ~12 hardware diagnostics categories with realistic subtopics,
-four question template styles (troubleshooting, how_to, comparison,
-best_practice), and a combinatorial generator that produces diverse
-training prompts for fine-tuning.
+Defines ~12 hardware diagnostics categories with realistic subtopics
+and underlying physics-principle mappings, five question template styles
+(troubleshooting, how_to, comparison, best_practice, physics_why), and a
+combinatorial generator that produces diverse training prompts for fine-tuning.
 """
 
 import random
@@ -24,6 +24,11 @@ TOPICS = [
             "JTAG-based flash programming and debug access",
             "interconnect testing for fine-pitch solder joints",
         ],
+        "physics_principles": [
+            "signal propagation delay",
+            "clock domain crossing",
+            "transmission line effects",
+        ],
     },
     {
         "name": "functional_test",
@@ -34,6 +39,11 @@ TOPICS = [
             "high-speed serial interface loopback testing",
             "peripheral bus enumeration and response checks",
             "firmware-assisted POST (Power-On Self Test) routines",
+        ],
+        "physics_principles": [
+            "power delivery physics",
+            "clock distribution",
+            "signal integrity",
         ],
     },
     {
@@ -46,6 +56,11 @@ TOPICS = [
             "statistical Pareto analysis of field failure returns",
             "5-why causal chain analysis for intermittent defects",
         ],
+        "physics_principles": [
+            "statistical reasoning",
+            "thermal physics (IR imaging)",
+            "wave propagation (TDR)",
+        ],
     },
     {
         "name": "test_coverage",
@@ -56,6 +71,10 @@ TOPICS = [
             "defect-per-million (DPM) correlation to test escapes",
             "untestable net identification and mitigation",
             "coverage overlap between ICT, functional, and boundary scan",
+        ],
+        "physics_principles": [
+            "information theory",
+            "entropy as coverage metric",
         ],
     },
     {
@@ -68,6 +87,11 @@ TOPICS = [
             "phase-locked loop (PLL) lock time and jitter analysis",
             "mixed-signal stimulus-response using arbitrary waveform generators",
         ],
+        "physics_principles": [
+            "sampling theory (Nyquist)",
+            "noise physics",
+            "phase-locked loop dynamics",
+        ],
     },
     {
         "name": "in_circuit_test",
@@ -78,6 +102,11 @@ TOPICS = [
             "capacitor ESR and inductance measurement under fixture",
             "vectorless test methods for unpowered cluster testing",
             "flying probe versus fixed-fixture ICT trade-offs",
+        ],
+        "physics_principles": [
+            "circuit theory (Kirchhoff's laws, Ohm's law)",
+            "impedance",
+            "guarded measurements",
         ],
     },
     {
@@ -90,6 +119,10 @@ TOPICS = [
             "UART/SPI/I2C bus health monitoring via embedded agents",
             "FPGA-based logic BIST pattern generation",
         ],
+        "physics_principles": [
+            "semiconductor physics (voltage/temp sensors)",
+            "digital logic timing",
+        ],
     },
     {
         "name": "test_automation",
@@ -100,6 +133,9 @@ TOPICS = [
             "parallel test execution across multi-DUT fixtures",
             "test result database schema and traceability",
             "CI/CD integration for regression test suites on hardware",
+        ],
+        "physics_principles": [
+            "measurement physics (VISA/SCPI instrument models)",
         ],
     },
     {
@@ -112,6 +148,10 @@ TOPICS = [
             "first-pass yield (FPY) improvement via test data analytics",
             "fixture maintenance scheduling based on contact resistance trends",
         ],
+        "physics_principles": [
+            "statistical process control",
+            "measurement uncertainty",
+        ],
     },
     {
         "name": "environmental_stress",
@@ -122,6 +162,11 @@ TOPICS = [
             "vibration and mechanical shock qualification per MIL-STD-810",
             "humidity and condensation effects on conformal-coated assemblies",
             "burn-in strategies for infant mortality screening",
+        ],
+        "physics_principles": [
+            "thermodynamics",
+            "mechanical stress-strain",
+            "Arrhenius acceleration models",
         ],
     },
     {
@@ -134,6 +179,11 @@ TOPICS = [
             "jitter decomposition (RJ, DJ, TJ) on SerDes links",
             "decoupling capacitor placement and PDN resonance mitigation",
         ],
+        "physics_principles": [
+            "electromagnetic wave propagation",
+            "transmission line theory",
+            "PDN impedance",
+        ],
     },
     {
         "name": "aoi_xray",
@@ -144,6 +194,11 @@ TOPICS = [
             "tombstone and component skew detection algorithms",
             "head-in-pillow defect identification on package-on-package",
             "machine learning classifiers for false-call reduction in AOI",
+        ],
+        "physics_principles": [
+            "optics",
+            "X-ray absorption physics",
+            "image processing",
         ],
     },
 ]
@@ -187,6 +242,15 @@ TEMPLATES = {
         "What common pitfalls should engineers avoid when implementing "
         "{subtopic} as part of {display_name}, and how can these be "
         "prevented?",
+    ],
+    "physics_why": [
+        "From a physics perspective, why does {subtopic} behave the way "
+        "it does in {display_name}? Explain the underlying physical "
+        "principles.",
+        "What are the underlying physical principles that explain "
+        "{subtopic} in the context of {display_name}?",
+        "Describe the fundamental physics behind {subtopic} and how those "
+        "principles shape practical outcomes in {display_name}.",
     ],
 }
 
