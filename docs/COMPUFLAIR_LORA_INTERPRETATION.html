@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Don't Melt It — Perturb It: A Physics Interpretation of LoRA Fine-Tuning</title>
+<!-- KaTeX for math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;line-height:1.7;color:#2d2d2d;background:#f0f2f5;padding:20px}
+.container{max-width:960px;margin:0 auto;background:#fff;padding:40px 45px;box-shadow:0 2px 20px rgba(0,0,0,0.08);border-radius:10px}
+h1{color:#1a3a5c;border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:8px;font-size:2.1em;line-height:1.3}
+.subtitle{color:#555;font-size:1.05em;margin-bottom:25px}
+h2{color:#1a3a5c;margin:35px 0 18px;font-size:1.6em;border-left:5px solid #1a3a5c;padding-left:14px}
+h3{color:#2c5282;margin:22px 0 12px;font-size:1.2em}
+p{margin-bottom:14px;text-align:justify}
+ul,ol{margin:0 0 14px 28px}
+li{margin-bottom:8px}
+.abstract{background:#e8f0fe;padding:18px 22px;border-left:5px solid #1a3a5c;margin-bottom:28px;border-radius:4px;font-style:italic}
+.diagram{margin:25px 0;padding:18px;background:#fafbfc;border-radius:6px;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.caption{margin-top:8px;font-size:.9em;color:#666;font-style:italic;text-align:center}
+table{width:100%;border-collapse:collapse;margin:18px 0;font-size:.95em}
+th,td{border:1px solid #d0d7de;padding:10px 12px;text-align:left;vertical-align:top}
+th{background:#1a3a5c;color:#fff;font-weight:600}
+tr:nth-child(even){background:#f6f8fa}
+.note{background:#fff8e1;padding:14px 18px;border-left:4px solid #f9a825;margin:16px 0;border-radius:4px}
+.note strong{color:#e65100}
+.insight{background:#e8f5e9;padding:14px 18px;border-left:4px solid #2e7d32;margin:16px 0;border-radius:4px}
+.insight strong{color:#1b5e20}
+.punchline{background:#fce4ec;padding:16px 20px;border-left:5px solid #c62828;margin:20px 0;border-radius:4px;font-size:1.1em}
+.punchline strong{color:#b71c1c}
+.eq{background:#f5f5f5;padding:16px 20px;margin:16px 0;border-left:4px solid #1a3a5c;overflow-x:auto;text-align:center;font-size:1.15em}
+a{color:#1a3a5c}
+.footer{margin-top:40px;padding-top:18px;border-top:2px solid #e0e0e0;text-align:center;color:#888;font-size:.85em}
+.pipeline-step{display:flex;align-items:flex-start;gap:14px;margin:12px 0;padding:12px 16px;background:#f9fafb;border-radius:6px;border:1px solid #e8e8e8}
+.pipeline-num{background:#1a3a5c;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95em;flex-shrink:0;margin-top:2px}
+.pipeline-content{flex:1}
+.pipeline-content strong{color:#1a3a5c}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:.8em;margin:2px;font-weight:600}
+.tag-phys{background:#e3f2fd;color:#1565c0}
+.tag-ml{background:#fce4ec;color:#c62828}
+.tag-both{background:#e8f5e9;color:#2e7d32}
+.toc{background:#f5f7fa;padding:18px 24px;border-radius:6px;border:1px solid #e0e0e0;margin-bottom:28px}
+.toc h3{margin:0 0 10px;color:#1a3a5c;font-size:1.05em;border:none;padding:0}
+.toc ol{margin:0 0 0 20px;padding:0}
+.toc li{margin-bottom:4px;font-size:.95em}
+.toc a{color:#2c5282;text-decoration:none}
+.toc a:hover{text-decoration:underline;color:#1a3a5c}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Don't Melt It &mdash; Perturb It</h1>
+<p class="subtitle">A CompuFlair Physics Interpretation of LoRA Fine-Tuning &nbsp;|&nbsp; March 12, 2026</p>
+
+<div class="abstract">
+<strong>Context:</strong> This document interprets the LoRA fine-tuning pipeline of the
+<em>Hardware Diagnostics LLM</em> project through the CompuFlair framework
+(Ardavan Borzou): the thesis that all of machine learning can be understood through
+the Gibbs&ndash;Boltzmann equation $P = e^{-F}/Z$. Every component of the pipeline &mdash;
+the base model, LoRA adapters, quantization, training dynamics &mdash; maps to a
+well-understood concept in statistical mechanics and perturbation theory.
+</div>
+
+<nav class="toc">
+<h3>Table of Contents</h3>
+<ol>
+  <li><a href="#framework">The CompuFlair Framework</a></li>
+  <li><a href="#equilibrium">The Base Model as Thermodynamic Equilibrium</a></li>
+  <li><a href="#perturbation">LoRA as Perturbation Theory</a></li>
+  <li><a href="#annealing">Training Dynamics as Annealing</a></li>
+  <li><a href="#quantization">4-Bit Quantization as Literal Quantization</a></li>
+  <li><a href="#pipeline">The Complete Pipeline in CompuFlair Terms</a></li>
+  <li><a href="#why-it-matters">Why This Matters</a></li>
+  <li><a href="#sources">Source Materials</a></li>
+</ol>
+</nav>
+
+<!-- ================================================================ -->
+<h2 id="framework">1. The CompuFlair Framework</h2>
+
+<p>CompuFlair's central thesis is that the entire field of ML can be interpreted through one equation from statistical mechanics:</p>
+
+<div class="eq">
+$$P = \frac{e^{-F}}{Z}$$
+</div>
+
+<p>where $F$ is the free energy (the loss or cost function), and $Z = \sum_{\text{configs}} e^{-F}$ is the partition function &mdash; a normalization over all possible configurations of the system. Training an ML model is equivalent to <strong>cooling a physical system</strong>: finding the low-energy configuration of parameters that best fits the data.</p>
+
+<p>This document applies that lens to every component of our fine-tuning pipeline.</p>
+
+<!-- ================================================================ -->
+<h2 id="equilibrium">2. The Base Model as Thermodynamic Equilibrium</h2>
+
+<p><strong>Llama 3.2 3B</strong> was pre-trained on trillions of tokens by Meta. In the CompuFlair framework, this pre-training was a massive annealing process: the system ($\sim\!3 \times 10^9$ parameters) was heated (high learning rate, large batches, diverse data) and slowly cooled over weeks of training on GPU clusters, settling into a low-energy equilibrium across the loss landscape.</p>
+
+<p>The result is a parameter configuration $\mathbf{W}_0$ that sits in a deep, broad basin of the energy surface. The model's &ldquo;knowledge&rdquo; &mdash; grammar, reasoning patterns, factual recall &mdash; is encoded in the <em>geometry</em> of this basin. The curvature of the loss landscape around $\mathbf{W}_0$ (the Hessian matrix $\mathbf{H} = \nabla^2 \mathcal{L}\big|_{\mathbf{W}_0}$) determines how the model responds to perturbations.</p>
+
+<div class="insight">
+<strong>Key insight:</strong> The base model is a <em>solved system.</em> Meta spent millions of dollars and weeks of GPU-cluster time carefully annealing 3&nbsp;billion parameters into this equilibrium. It knows grammar, reasoning, conversation, world knowledge &mdash; an enormous amount of structure encoded in the curvature of that energy landscape.
+</div>
+
+<p>Now you want it to also know about hardware diagnostics.</p>
+
+<p>The brute-force approach &mdash; full fine-tuning &mdash; would unfreeze all 3&nbsp;billion parameters and let them all move in response to your 252 training examples. In thermodynamic terms, <strong>you'd be melting the entire system down and re-annealing it from scratch.</strong> All that carefully achieved equilibrium &mdash; the grammar, the reasoning, the general knowledge &mdash; tossed back into the furnace because you wanted to add some expertise about JTAG chains.</p>
+
+<div class="punchline">
+<strong>That's insane. You don't melt down a cathedral because you want to add a room.</strong>
+</div>
+
+<p>This is what makes LoRA so elegant, and frankly kind of funny once you see it through the physics lens:</p>
+
+<!-- SVG: Melt vs. Perturb -->
+<div class="diagram">
+<svg viewBox="0 0 780 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#c62828"/></marker>
+    <marker id="arr-g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2e7d32"/></marker>
+  </defs>
+
+  <!-- Left: Full Fine-Tuning (melt) -->
+  <rect x="20" y="20" width="350" height="240" rx="8" fill="#fce4ec" stroke="#c62828" stroke-width="2"/>
+  <text x="195" y="50" text-anchor="middle" font-size="15" font-weight="bold" fill="#c62828">FULL FINE-TUNING</text>
+  <text x="195" y="72" text-anchor="middle" font-size="11" fill="#c62828">&ldquo;Melt the cathedral&rdquo;</text>
+
+  <!-- Energy landscape: melted -->
+  <path d="M 60,190 Q 100,100 140,170 Q 170,210 195,130 Q 220,80 250,180 Q 280,220 310,150 Q 330,110 340,190" stroke="#c62828" stroke-width="2" fill="none" stroke-dasharray="6,4"/>
+  <text x="195" y="230" text-anchor="middle" font-size="10" fill="#555">all 3B parameters free to move</text>
+  <text x="195" y="245" text-anchor="middle" font-size="10" fill="#555">equilibrium destroyed</text>
+
+  <!-- Ball bouncing around -->
+  <circle cx="195" cy="122" r="7" fill="#c62828" opacity="0.7"/>
+  <line x1="195" y1="129" x2="160" y2="165" stroke="#c62828" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="195" y1="129" x2="240" y2="155" stroke="#c62828" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <line x1="195" y1="129" x2="195" y2="95" stroke="#c62828" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+  <!-- Right: LoRA (perturb) -->
+  <rect x="410" y="20" width="350" height="240" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="585" y="50" text-anchor="middle" font-size="15" font-weight="bold" fill="#2e7d32">LoRA FINE-TUNING</text>
+  <text x="585" y="72" text-anchor="middle" font-size="11" fill="#2e7d32">&ldquo;Perturb it&rdquo;</text>
+
+  <!-- Energy landscape: stable with small perturbation -->
+  <path d="M 450,190 Q 490,100 530,170 Q 560,210 585,130 Q 610,80 640,180 Q 670,220 700,150 Q 720,110 730,190" stroke="#1a3a5c" stroke-width="2" fill="none"/>
+  <text x="585" y="230" text-anchor="middle" font-size="10" fill="#555">base frozen, only rank-8 correction moves</text>
+  <text x="585" y="245" text-anchor="middle" font-size="10" fill="#555">equilibrium preserved</text>
+
+  <!-- Ball sitting in minimum with small arrow -->
+  <circle cx="585" cy="122" r="7" fill="#2e7d32"/>
+  <line x1="592" y1="120" x2="608" y2="115" stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arr-g)"/>
+  <text x="630" y="112" font-size="9" fill="#2e7d32" font-weight="bold">&Delta;W = BA</text>
+</svg>
+<div class="caption">Figure 1: Full fine-tuning melts the entire energy landscape and re-anneals from scratch. LoRA keeps the landscape frozen and applies a small, targeted perturbation. Same result, orders of magnitude less destruction.</div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="perturbation">3. LoRA as Perturbation Theory</h2>
+
+<p>This is the central physics insight of the entire project, and it's not just metaphorical &mdash; the mathematics are structurally identical.</p>
+
+<h3>3.1 The Perturbation Framework</h3>
+
+<p>In quantum mechanics and statistical mechanics, perturbation theory handles problems of the form:</p>
+
+<div class="eq">
+$$\hat{H} = \hat{H}_0 + \lambda \hat{V}$$
+</div>
+
+<p>where $\hat{H}_0$ is the solved (unperturbed) Hamiltonian with known eigenstates, $\hat{V}$ is a small perturbation, and $\lambda$ controls the perturbation strength. You don't re-solve the full system &mdash; you compute <em>corrections</em> to the known solution. The first-order energy correction is just an expectation value; the first-order state correction is a sum over unperturbed states weighted by matrix elements of $\hat{V}$.</p>
+
+<p>LoRA does exactly this:</p>
+
+<div class="eq">
+$$\mathbf{W} = \mathbf{W}_0 + \Delta\mathbf{W} = \mathbf{W}_0 + \mathbf{B}\mathbf{A}$$
+</div>
+
+<p>where:</p>
+<ul>
+  <li>$\mathbf{W}_0$ (frozen base weights) = the <strong>ground state</strong>, the unperturbed solution $\hat{H}_0$</li>
+  <li>$\Delta\mathbf{W} = \mathbf{B}\mathbf{A}$ (low-rank adapter matrices) = the <strong>perturbation correction</strong> $\lambda\hat{V}$</li>
+  <li>$\mathbf{B} \in \mathbb{R}^{d \times r}$ and $\mathbf{A} \in \mathbb{R}^{r \times k}$ with rank $r \ll \min(d, k)$</li>
+</ul>
+
+<p>The rank $r$ is the dimensionality of the perturbation subspace &mdash; how many &ldquo;modes&rdquo; of the system you allow to respond to the new data.</p>
+
+<h3>3.2 Our Configuration</h3>
+
+<table>
+<tr>
+  <th style="width:28%">Parameter</th>
+  <th style="width:22%">Value</th>
+  <th style="width:50%">Physics Analogy</th>
+</tr>
+<tr>
+  <td>Rank $r$</td>
+  <td>8</td>
+  <td>8 perturbation modes per adapted layer</td>
+</tr>
+<tr>
+  <td>Base weights $\mathbf{W}_0$</td>
+  <td>$\sim\!3 \times 10^9$, frozen</td>
+  <td>Ground state &mdash; solved, don't touch</td>
+</tr>
+<tr>
+  <td>LoRA parameters</td>
+  <td>$\sim\!1\text{&ndash;}2 \times 10^6$ trainable</td>
+  <td>Perturbation corrections only</td>
+</tr>
+<tr>
+  <td>Compression ratio</td>
+  <td>$\sim\!1500 : 1$</td>
+  <td>Only 1 in 1500 degrees of freedom needs to move</td>
+</tr>
+</table>
+
+<h3>3.3 Why This Works (The Deep Physics Point)</h3>
+
+<p>The success of a rank-8 perturbation tells us something fundamental about the geometry of the fine-tuning loss landscape:</p>
+
+<div class="insight">
+<strong>The &ldquo;distance&rdquo; in parameter space between the base model's general-purpose solution and our hardware-diagnostics-specialist solution lies in a very low-dimensional subspace.</strong> The domain-specific knowledge occupies only a few modes of the full system.
+</div>
+
+<p>Most of the base model's energy landscape doesn't need to change &mdash; the grammar, the reasoning patterns, the conversational structure are all preserved in $\mathbf{W}_0$. Only the domain-specific response patterns need adjustment, and those live in a subspace of dimension $r \times n_{\text{layers}}$.</p>
+
+<p>This is exactly what perturbation theory predicts: when the perturbation is small relative to the unperturbed system, first-order corrections capture most of the effect. Higher-order corrections (higher rank, more layers) yield diminishing returns &mdash; just as in physics.</p>
+
+<!-- SVG: Perturbation subspace diagram -->
+<div class="diagram">
+<svg viewBox="0 0 780 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#1a3a5c"/></marker>
+    <marker id="a3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2e7d32"/></marker>
+    <marker id="a4" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#c62828"/></marker>
+  </defs>
+
+  <text x="390" y="24" text-anchor="middle" font-size="15" font-weight="bold" fill="#1a3a5c">Parameter Space: 3 Billion Dimensions</text>
+
+  <!-- Big ellipse: full parameter space -->
+  <ellipse cx="390" cy="165" rx="340" ry="120" fill="#f5f7fa" stroke="#bbb" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <text x="680" y="270" font-size="10" fill="#999">full weight space W &isin; &real;<tspan baseline-shift="super" font-size="7">3&times;10&sup9;</tspan></text>
+
+  <!-- W0 point -->
+  <circle cx="280" cy="160" r="8" fill="#1a3a5c"/>
+  <text x="255" y="145" font-size="13" font-weight="bold" fill="#1a3a5c">W&#x2080;</text>
+  <text x="232" y="195" font-size="10" fill="#555">base model</text>
+  <text x="232" y="208" font-size="10" fill="#555">(ground state)</text>
+
+  <!-- Small colored subspace around W0 -->
+  <ellipse cx="370" cy="155" rx="100" ry="35" fill="rgba(46,125,50,0.12)" stroke="#2e7d32" stroke-width="2" transform="rotate(-12 370 155)"/>
+  <text x="420" y="122" font-size="11" font-weight="bold" fill="#2e7d32">LoRA subspace</text>
+  <text x="420" y="136" font-size="10" fill="#2e7d32">rank r = 8 per layer</text>
+
+  <!-- Arrow from W0 to W* within subspace -->
+  <line x1="288" y1="158" x2="428" y2="148" stroke="#2e7d32" stroke-width="2.5" marker-end="url(#a3)"/>
+  <circle cx="435" cy="147" r="6" fill="#2e7d32"/>
+  <text x="445" y="155" font-size="12" font-weight="bold" fill="#2e7d32">W*</text>
+  <text x="445" y="170" font-size="10" fill="#555">fine-tuned</text>
+
+  <!-- Label the arrow -->
+  <text x="345" y="140" font-size="11" fill="#2e7d32">&Delta;W = BA</text>
+
+  <!-- Full fine-tuning arrow going way out -->
+  <line x1="288" y1="162" x2="570" y2="210" stroke="#c62828" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#a4)"/>
+  <text x="490" y="225" font-size="10" fill="#c62828">full fine-tuning</text>
+  <text x="490" y="238" font-size="10" fill="#c62828">(3B params free &rarr; catastrophic forgetting)</text>
+</svg>
+<div class="caption">Figure 2: LoRA constrains the fine-tuning update $\Delta\mathbf{W} = \mathbf{BA}$ to a low-rank subspace (green ellipse) within the enormous full parameter space. The base model $\mathbf{W}_0$ stays fixed; only the small perturbation moves. Full fine-tuning (red dashed) wanders freely through all 3&nbsp;billion dimensions, risking catastrophic forgetting.</div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="annealing">4. Training Dynamics as Annealing</h2>
+
+<p>The gradient descent process on LoRA parameters maps directly to the thermodynamics of annealing.</p>
+
+<h3>4.1 Learning Rate as Temperature</h3>
+
+<div class="eq">
+$$\eta \;\longleftrightarrow\; T$$
+</div>
+
+<p>Our learning rate of $\eta = 10^{-5}$ is very low &mdash; this is a <em>cold</em> annealing process. We're making small, careful adjustments to the perturbation parameters, not violent rearrangements. In the Gibbs&ndash;Boltzmann framework, the probability of accepting a parameter update that <em>increases</em> the loss (energy) scales as:</p>
+
+<div class="eq">
+$$P(\text{accept uphill move}) \;\propto\; e^{-\Delta F / T}$$
+</div>
+
+<p>At low temperature (low learning rate), the system almost never accepts uphill moves &mdash; it follows the gradient downhill monotonically. This is appropriate because we're refining a perturbation to an already-good solution; we don't need to explore widely.</p>
+
+<h3>4.2 Batch Size as Thermal Noise</h3>
+
+<div class="eq">
+$$\text{batch size} \;\longleftrightarrow\; \frac{1}{\sigma^2_{\text{thermal}}}$$
+</div>
+
+<p>Our batch size of <strong>2</strong> is small, which means each gradient estimate is noisy &mdash; computed from only 2 examples rather than the full dataset of $\sim\!200$. In thermodynamic terms, this injects stochastic noise into the annealing process:</p>
+
+<table>
+<tr>
+  <th style="width:30%">Batch Size</th>
+  <th style="width:35%">Noise Level</th>
+  <th style="width:35%">Thermodynamic Effect</th>
+</tr>
+<tr>
+  <td>Large (e.g., 64)</td>
+  <td>Low noise, smooth gradient</td>
+  <td>Low effective temperature &rarr; may trap in local minima</td>
+</tr>
+<tr>
+  <td><strong>Small (our 2)</strong></td>
+  <td><strong>High noise, stochastic kicks</strong></td>
+  <td><strong>Higher effective temp &rarr; helps escape shallow minima</strong></td>
+</tr>
+</table>
+
+<p>Batch size 2 is a deliberate choice: the noise acts as thermal fluctuations that help the perturbation parameters explore the low-dimensional subspace defined by the LoRA rank, without being so violent as to destabilize the solution.</p>
+
+<h3>4.3 Iteration Count as Annealing Schedule</h3>
+
+<p><strong>600 iterations</strong> defines our annealing schedule. With batch size 2 and $\sim\!200$ training examples, each example is seen roughly 6 times (6 epochs). The system passes through three thermodynamic phases:</p>
+
+<!-- SVG: Annealing phases / loss curve -->
+<div class="diagram">
+<svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+  <!-- Axes -->
+  <line x1="70" y1="200" x2="660" y2="200" stroke="#333" stroke-width="1.5"/>
+  <line x1="70" y1="200" x2="70" y2="30" stroke="#333" stroke-width="1.5"/>
+  <text x="365" y="230" text-anchor="middle" font-size="12" fill="#333">Iteration</text>
+  <text x="25" y="120" text-anchor="middle" font-size="12" fill="#333" transform="rotate(-90 25 120)">Loss (Energy)</text>
+
+  <!-- Tick marks -->
+  <line x1="168" y1="200" x2="168" y2="205" stroke="#333"/>
+  <text x="168" y="218" text-anchor="middle" font-size="10" fill="#555">100</text>
+  <line x1="364" y1="200" x2="364" y2="205" stroke="#333"/>
+  <text x="364" y="218" text-anchor="middle" font-size="10" fill="#555">400</text>
+  <line x1="560" y1="200" x2="560" y2="205" stroke="#333"/>
+  <text x="560" y="218" text-anchor="middle" font-size="10" fill="#555">600</text>
+
+  <!-- Loss curve -->
+  <path d="M 70,50 Q 100,55 120,80 Q 140,110 168,130 Q 250,160 364,175 Q 460,182 560,185 Q 620,186 650,186" stroke="#1a3a5c" stroke-width="3" fill="none"/>
+
+  <!-- Phase regions -->
+  <rect x="70" y="30" width="98" height="170" fill="rgba(198,40,40,0.06)" rx="0"/>
+  <rect x="168" y="30" width="196" height="170" fill="rgba(255,152,0,0.06)" rx="0"/>
+  <rect x="364" y="30" width="196" height="170" fill="rgba(46,125,50,0.06)" rx="0"/>
+
+  <!-- Phase labels -->
+  <text x="119" y="48" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">Phase I</text>
+  <text x="119" y="62" text-anchor="middle" font-size="9" fill="#c62828">Rapid cooling</text>
+  <text x="266" y="48" text-anchor="middle" font-size="10" font-weight="bold" fill="#e65100">Phase II</text>
+  <text x="266" y="62" text-anchor="middle" font-size="9" fill="#e65100">Settling</text>
+  <text x="462" y="48" text-anchor="middle" font-size="10" font-weight="bold" fill="#2e7d32">Phase III</text>
+  <text x="462" y="62" text-anchor="middle" font-size="9" fill="#2e7d32">Equilibrium</text>
+</svg>
+<div class="caption">Figure 3: The three phases of the LoRA annealing schedule. Phase I (0&ndash;100): rapid energy loss as parameters leave random initialization. Phase II (100&ndash;400): gradual settling into the perturbation basin. Phase III (400&ndash;600): thermal fluctuations around the equilibrium &mdash; the perturbation has converged.</div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="quantization">5. 4-Bit Quantization as Literal Quantization</h2>
+
+<p>This is perhaps the most satisfying physics mapping because it's not even an analogy &mdash; it's the same mathematical operation.</p>
+
+<p>In quantum mechanics, quantization restricts a continuous observable to discrete values. In our case:</p>
+
+<div class="eq">
+$$\text{Continuous weight space } \mathbb{R} \;\longrightarrow\; 16 \text{ discrete levels} \quad (4\;\text{bits} = 2^4 = 16\;\text{values})$$
+</div>
+
+<p>Each parameter in the base model, which could take any real value, is mapped to one of 16 discrete levels. The information loss is bounded by the spacing between levels, exactly like the energy level spacing in a quantum harmonic oscillator:</p>
+
+<div class="eq">
+$$\Delta E = \hbar\omega$$
+</div>
+
+<p>determines the minimum resolvable energy.</p>
+
+<div class="insight">
+<strong>Why quantization works:</strong> The information content of each individual weight is low. The model's knowledge is distributed across billions of parameters &mdash; no single parameter carries more than a few bits of meaningful information. The base model is a low-temperature system where parameters cluster near their equilibrium values; 16 levels per parameter is more than enough to resolve the meaningful structure.
+</div>
+
+<p>This is why 4-bit quantization preserves model quality while cutting memory by $4\times$: <strong>you're not losing information about the ground state; you're just discretizing the coordinate system that describes it.</strong></p>
+
+<!-- SVG: Quantization diagram -->
+<div class="diagram">
+<svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Continuous distribution -->
+  <text x="175" y="20" text-anchor="middle" font-size="12" font-weight="bold" fill="#1a3a5c">32-bit (continuous)</text>
+  <line x1="30" y1="150" x2="320" y2="150" stroke="#333" stroke-width="1"/>
+  <!-- Gaussian-ish blob of weight values -->
+  <path d="M 60,150 Q 80,148 100,140 Q 130,110 155,60 Q 175,40 195,60 Q 220,110 250,140 Q 270,148 290,150" stroke="#1a3a5c" stroke-width="2.5" fill="rgba(26,58,92,0.1)"/>
+  <text x="175" y="170" text-anchor="middle" font-size="10" fill="#555">weight distribution (peaked at equilibrium)</text>
+
+  <!-- Arrow -->
+  <text x="350" y="95" text-anchor="middle" font-size="22" fill="#555">&rarr;</text>
+  <text x="350" y="115" text-anchor="middle" font-size="10" fill="#555">quantize</text>
+
+  <!-- Discrete levels -->
+  <text x="525" y="20" text-anchor="middle" font-size="12" font-weight="bold" fill="#2e7d32">4-bit (16 levels)</text>
+  <line x1="380" y1="150" x2="670" y2="150" stroke="#333" stroke-width="1"/>
+  <!-- Bars at discrete levels -->
+  <rect x="410" y="145" width="8" height="5" fill="#2e7d32"/>
+  <rect x="428" y="138" width="8" height="12" fill="#2e7d32"/>
+  <rect x="446" y="125" width="8" height="25" fill="#2e7d32"/>
+  <rect x="464" y="105" width="8" height="45" fill="#2e7d32"/>
+  <rect x="482" y="75" width="8" height="75" fill="#2e7d32"/>
+  <rect x="500" y="48" width="8" height="102" fill="#2e7d32"/>
+  <rect x="518" y="55" width="8" height="95" fill="#2e7d32"/>
+  <rect x="536" y="80" width="8" height="70" fill="#2e7d32"/>
+  <rect x="554" y="110" width="8" height="40" fill="#2e7d32"/>
+  <rect x="572" y="128" width="8" height="22" fill="#2e7d32"/>
+  <rect x="590" y="138" width="8" height="12" fill="#2e7d32"/>
+  <rect x="608" y="143" width="8" height="7" fill="#2e7d32"/>
+  <text x="525" y="170" text-anchor="middle" font-size="10" fill="#555">same distribution, 16 bins &mdash; minimal information loss</text>
+</svg>
+<div class="caption">Figure 4: Quantization maps a continuous weight distribution (left) to 16 discrete levels (right). Because the weights cluster tightly around their equilibrium values (low-temperature system), 4 bits per parameter captures the meaningful structure with negligible loss.</div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="pipeline">6. The Complete Pipeline in CompuFlair Terms</h2>
+
+<div class="pipeline-step">
+  <div class="pipeline-num">1</div>
+  <div class="pipeline-content">
+    <strong>Download base model</strong><br>
+    Import a pre-solved thermodynamic system ($\mathbf{W}_0$) that has been annealed to equilibrium by Meta's training infrastructure. Cost of the original annealing: millions of dollars. Cost to us: one download.
+  </div>
+</div>
+
+<div class="pipeline-step">
+  <div class="pipeline-num">2</div>
+  <div class="pipeline-content">
+    <strong>Quantize to 4-bit</strong><br>
+    Discretize the state space: $\mathbb{R} \to 2^4 = 16$ levels per weight. Information loss is minimal because the system is already at equilibrium &mdash; parameters cluster near their solved values. Memory: $\sim\!2\;\text{GB}$ (down from $\sim\!6\;\text{GB}$ at 16-bit).
+  </div>
+</div>
+
+<div class="pipeline-step">
+  <div class="pipeline-num">3</div>
+  <div class="pipeline-content">
+    <strong>Initialize LoRA adapters</strong><br>
+    Create a low-dimensional perturbation subspace: rank $r = 8$ per adapted layer. $\mathbf{B}$ initialized to zero, $\mathbf{A}$ initialized randomly &mdash; the perturbation starts as &ldquo;no change,&rdquo; then learns the correction.
+  </div>
+</div>
+
+<div class="pipeline-step">
+  <div class="pipeline-num">4</div>
+  <div class="pipeline-content">
+    <strong>Training (annealing)</strong><br>
+    Cool the perturbation parameters toward a minimum of the domain-specific loss.<br>
+    &bull; Learning rate $\eta = 10^{-5}$ (cold &mdash; careful refinement)<br>
+    &bull; Batch size 2 (moderate thermal noise for exploration)<br>
+    &bull; 600 iterations, $\sim\!6$ epochs (complete annealing schedule)
+  </div>
+</div>
+
+<div class="pipeline-step">
+  <div class="pipeline-num">5</div>
+  <div class="pipeline-content">
+    <strong>Inference with adapters</strong><br>
+    The final model computes $\mathbf{W} = \mathbf{W}_0 + \mathbf{B}\mathbf{A}$ at each adapted layer. The base model's ground state is perturbed by the learned correction, producing domain-specialized outputs while preserving the base model's general capabilities. The cathedral stands; the new room is open.
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="why-it-matters">7. Why This Matters</h2>
+
+<p>This interpretation isn't intellectual decoration. It explains practical engineering decisions:</p>
+
+<table>
+<tr>
+  <th style="width:40%">Engineering Decision</th>
+  <th style="width:60%">Physics Explanation</th>
+</tr>
+<tr>
+  <td><strong>Why LoRA instead of full fine-tuning?</strong></td>
+  <td>Perturbation theory requires orders of magnitude less computation than solving the full Hamiltonian. We train $\sim\!10^6$ parameters instead of $\sim\!10^9$.</td>
+</tr>
+<tr>
+  <td><strong>Why doesn't 4-bit quantization destroy the model?</strong></td>
+  <td>You're discretizing an equilibrium system. Quantization noise is small compared to the inter-basin energy barriers that encode the model's knowledge.</td>
+</tr>
+<tr>
+  <td><strong>Why can a specialist model still do general tasks?</strong></td>
+  <td>The base weights (ground state) are frozen. The perturbation $\Delta\mathbf{W}$ adds domain knowledge without disrupting the solved equilibrium.</td>
+</tr>
+<tr>
+  <td><strong>Why these specific hyperparameters?</strong></td>
+  <td>Low $\eta$ = cold annealing (refinement, not exploration). Small batch = thermal noise (escape local minima). 600 iters = complete but not excessive annealing.</td>
+</tr>
+<tr>
+  <td><strong>Why does this run on a consumer M1 iMac?</strong></td>
+  <td>Perturbation theory on a quantized ground state is computationally cheap. The hard work (pre-training = original annealing) was already done by Meta on a cluster.</td>
+</tr>
+</table>
+
+<div class="punchline">
+<strong>Understanding the physics makes you a better practitioner</strong> &mdash; not just of hardware diagnostics, but of ML itself. That's the CompuFlair thesis.
+</div>
+
+<!-- ================================================================ -->
+<h2 id="sources">8. Source Materials</h2>
+
+<p>This interpretation draws on three bodies of work at the physics&ndash;ML intersection:</p>
+
+<table>
+<tr>
+  <th style="width:25%">Source</th>
+  <th style="width:20%">Direction</th>
+  <th style="width:55%">Key Contribution</th>
+</tr>
+<tr>
+  <td><strong>CompuFlair</strong><br><span style="font-size:.85em;color:#666">Ardavan Borzou</span></td>
+  <td><span class="tag tag-phys">Physics &rarr; ML</span></td>
+  <td>$P = e^{-F}/Z$ as the unifying framework for all of ML. Physics-first pedagogy: training as annealing, models as spin systems, phase transitions in training dynamics.</td>
+</tr>
+<tr>
+  <td><strong>Vanchurin</strong><br><span style="font-size:.85em;color:#666">Vitali Vanchurin</span></td>
+  <td><span class="tag tag-both">Learning &harr; Physics</span></td>
+  <td>Learning dynamics <em>are</em> fundamental physics. The Hamiltonian is the loss function; Hamilton's equations emerge from gradient descent. QM, GR, and field theory as limits of learning dynamics.</td>
+</tr>
+<tr>
+  <td><strong>Brunton</strong><br><span style="font-size:.85em;color:#666">Steve Brunton</span></td>
+  <td><span class="tag tag-ml">Physics &rarr; ML architecture</span></td>
+  <td>Five-stage framework for embedding physics into ML. Hamiltonian and Lagrangian Neural Networks. Hard constraints (architecture) vs. soft constraints (loss function).</td>
+</tr>
+</table>
+
+<p>Primary documents: <code>Compu-Flair/</code> directory (in-project) and <code>Physics ML - Vanchurin-Comput-flare/</code> (Desktop).</p>
+
+<div class="footer">
+  Hardware Diagnostics LLM Fine-Tuning &mdash; Sam Kirk (with Claude Code) &mdash; March 2026
+</div>
+
+</div><!-- .container -->
+</body>
+</html>
