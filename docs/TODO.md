@@ -43,17 +43,17 @@
   - [x] Write to data/full_dataset.jsonl (Alpaca format)
   - [x] **TEST:** File contains 200-500 valid JSONL entries, spot-check 5 for physics grounding
 
-- [ ] **[Sam]** 2.3 Review dataset & approve
-  - [ ] Sam reviews data/full_dataset.jsonl for quality and accuracy
-  - [ ] Verify physics-first style: responses ground explanations in underlying physics, not just procedures
-  - [ ] Flag and revise any low-quality or insufficiently physics-grounded entries
-  - [ ] **GATE:** Sam approves dataset before proceeding
+- [x] **[Sam]** 2.3 Review dataset & approve *(completed via v2-fdfi review gate)*
+  - [x] Sam reviews data/full_dataset.jsonl for quality and accuracy
+  - [x] Verify physics-first style: responses ground explanations in underlying physics, not just procedures
+  - [x] Flag and revise any low-quality or insufficiently physics-grounded entries
+  - [x] **GATE:** Sam approves dataset before proceeding
 
-- [ ] **[Claude Code]** 2.4 Split into train/eval
-  - [ ] Create scripts/split_dataset.py
-  - [ ] Split 80/20 with seed 42
-  - [ ] Write data/train.jsonl and data/valid.jsonl
-  - [ ] **TEST:** Combined count matches full dataset, no duplicates
+- [x] **[Claude Code]** 2.4 Split into train/eval *(completed via v2-fdfi step 3.2)*
+  - [x] Create scripts/split_dataset.py
+  - [x] Split 80/20 with seed 42
+  - [x] Write data/train.jsonl and data/valid.jsonl
+  - [x] **TEST:** Combined count matches full dataset, no duplicates
 
 ---
 

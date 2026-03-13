@@ -93,12 +93,12 @@
 
 ## Phase 4: Review Gate
 
-- [ ] **[Sam]** 4.1 Review & approve augmented dataset
-  - [ ] Generate review summary (counts by category, by domain, avg response length, samples)
-  - [ ] Flag entries needing special attention (complex physics, judgment calls, triage entries)
-  - [ ] Sam reviews new FD/FI entries for technical accuracy and realistic data
-  - [ ] Revise any flagged entries
-  - [ ] **GATE:** Sam approves dataset → unblocks original TODO steps 2.4 → 3.1 → training
+- [x] **[Sam]** 4.1 Review & approve augmented dataset
+  - [x] Generate review summary (counts by category, by domain, avg response length, samples)
+  - [x] Flag entries needing special attention (complex physics, judgment calls, triage entries)
+  - [x] Sam reviews new FD/FI entries for technical accuracy and realistic data
+  - [x] Revise any flagged entries *(no revisions needed — Sam approved as-is)*
+  - [x] **GATE:** Sam approves dataset → unblocks original TODO steps 2.4 → 3.1 → training
 
 ---
 
@@ -106,7 +106,7 @@
 
 With Sam's approval, return to the **original TODO.md** and continue from:
 - [x] 2.3 Review dataset & approve *(completed via this v2-fdfi cycle)*
-- [ ] 2.4 Split into train/eval *(completed here as step 3.2)*
+- [x] 2.4 Split into train/eval *(completed here as step 3.2)*
 - [ ] 3.1 Configure & run LoRA training
 - [ ] 3.2 Verify fine-tuned model inference
 - [ ] ... (remaining original TODO steps)

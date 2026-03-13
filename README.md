@@ -110,6 +110,12 @@ This project's physics-first approach draws on three bodies of work comparing ph
 
 The CompuFlair curriculum itself remains a separate learning track. What this project adopts is the **explanatory style**: grounding every answer in the physical principles that govern the system, and interpreting the ML pipeline itself (LoRA, quantization, training dynamics) through the same physics lens.
 
+## Future Direction: Test Result Interpretation
+
+A natural next step is training the model to **interpret actual test program output** — power-on self-test, embedded diagnostics, manufacturing test, and field test results. In practice, so-called "diagnostic programs" rarely pinpoint failures on their own; they're really hardware test programs. True fault isolation requires running many tests and then doing substantial post-test analysis to correlate results and narrow down root causes.
+
+This is a hard problem because test program output formats vary widely across platforms, vendors, and test environments. A future dataset expansion would need to account for that diversity. But it's where the real diagnostic value lives — bridging the gap between raw test output and actionable fault isolation.
+
 ## Author
 
 Sam Kirk (with Claude Code)
