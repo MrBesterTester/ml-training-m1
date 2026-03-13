@@ -29,6 +29,12 @@ node_modules/
 # ML models (large binary files)
 models/
 
+# LoRA checkpoint intermediates (final adapters.safetensors is tracked)
+adapters/hw-diagnostics/0*_adapters.safetensors
+
+# Data backups
+*.alpaca-bak
+
 # do-work transient files
 do-work/working/
 
