@@ -49,7 +49,7 @@ The deepest insight: **LoRA works because the distance between "general-purpose 
 
 ## Project Status
 
-**In progress** — Phase 2 (Dataset Generation)
+**Phase 3 complete** — LoRA training finished (600 iterations, val loss 2.809 → 2.037). See the [training report](results/training_report.md) for full details.
 
 ## Tech Stack
 

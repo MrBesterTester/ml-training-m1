@@ -125,3 +125,7 @@ Previous training run hit Metal memory limits even with batch_size=1 and gradien
 - `results/training_log.txt` exists with loss values (189 lines): **PASS**
 
 All requirements met.
+
+## Report
+
+Full training report with convergence analysis, resource utilization, and baseline comparison: [`results/training_report.md`](../../results/training_report.md)
