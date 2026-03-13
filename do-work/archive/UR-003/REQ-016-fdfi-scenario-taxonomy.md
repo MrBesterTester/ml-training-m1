@@ -149,6 +149,7 @@ Architecture decisions:
 
 **Tests run:** `python scripts/generate_fdfi_dataset.py`
 **Result:** PASS — all validation checks passed
+**Full output:** [results/fdfi_taxonomy_test.txt](../../results/fdfi_taxonomy_test.txt)
 
 - Total scenarios: 41 (threshold: 30+)
 - All 4 categories present: FD, FI, FD_FI, TRIAGE

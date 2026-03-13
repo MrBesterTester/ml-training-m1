@@ -1,0 +1,74 @@
+
+====================================================================
+FD/FI SCENARIO TAXONOMY — CROSS-TABULATION
+====================================================================
+Domain                            FD      FI   FD_FI  TRIAGE   Total
+--------------------------------------------------------------------
+Boundary Scan / JTAG               2       1       1       1       5
+Signal Integrity                   2       2       1       1       6
+In-Circuit Test (ICT)              2       2       1       1       6
+Thermal Analysis                   1       1       1       1       4
+Mixed-Signal Test                  2       2       1       1       6
+Functional Test                    1       1       1       1       4
+Production Test                    2       2       0       1       5
+Environmental / Reliability        2       2       0       1       5
+--------------------------------------------------------------------
+TOTAL                             14      13       6       8      41
+====================================================================
+
+Category breakdown:
+  FD       (Fault Detection                 ):  14  (target: 14)
+  FI       (Fault Isolation                 ):  13  (target: 11)
+  FD_FI    (Fault Detection + Isolation     ):   6  (target: 8)
+  TRIAGE   (Triage (Misleading Data)        ):   8  (target: 13)
+
+  Grand total: 41 scenarios
+
+============================================================================
+SAMPLE SCENARIOS (3 of 41)
+============================================================================
+
+--- [1] FD-BS-001: Intermittent IDCODE bit flips ---
+  Category:          FD
+  Domain:            boundary_scan
+  Data type:         IDCODE register reads
+  Data description:  5 consecutive IDCODE reads from device 3 in a 5-device chain, hex values...
+  Nominal range:     Consistent 0x0BA00477 across all reads
+  Anomaly:           Bit 28 alternates between 0 and 1 across reads
+  Root cause:        Marginal signal integrity on TDO — insufficient setup time margin
+  Physics:           TDO setup time vs TCK falling edge, shift register jitter accumulation through c...
+
+--- [2] FI-SI-002: PDN resonance causing bit errors ---
+  Category:          FI
+  Domain:            signal_integrity
+  Data type:         PDN impedance sweep Z(f)
+  Data description:  Power distribution network impedance magnitude measured from 1 MHz to 1 GHz at IC pad...
+  Nominal range:     Z_PDN < 0.5 ohm from DC to 500 MHz (target impedance)
+  Anomaly:           Anti-resonance peak: impedance spikes to 2.0 ohm at 150 MHz
+  Root cause:        Missing decoupling capacitors — insufficient capacitor count in 100-200 MHz rang
+  Physics:           Parallel LC resonance of PCB plane capacitance + via inductance; anti-resonance ...
+
+--- [3] TRIAGE-XDOM-003: Mixed-signal ADC noise looks like degraded SNR ---
+  Category:          TRIAGE
+  Domain:            mixed_signal
+  Data type:         ADC output FFT
+  Data description:  4,096-point FFT of 12-bit ADC sampling a precision DC reference, captured on test fixture...
+  Nominal range:     SNR > 70 dB, no spurs above -80 dBFS
+  Anomaly:           Elevated noise floor at -85 dBFS (vs expected -95 dBFS), with discrete spurs at 
+  Root cause:        Ground loop between test fixture and DUT — AC mains coupling through ground impe
+  Physics:           Spurs at exact power-line harmonics (60/120/180/240 Hz) are diagnostic of AC mai...
+  Triage actual:     Ground loop injecting 60 Hz harmonics from AC mains; fixture grounding issue, no
+
+============================================================================
+VALIDATION
+============================================================================
+  Total scenarios:       41
+  Threshold (min 30):    PASS (41 >= 30)
+  Categories found:      ['FD', 'FD_FI', 'FI', 'TRIAGE'] (PASS)
+  Domains found:         8 of 8 (PASS)
+  TRIAGE actual_cause:   PASS
+  Required keys:         PASS
+
+  Per-category counts:   FD=14, FI=13, FD_FI=6, TRIAGE=8
+
+  OVERALL: PASS
