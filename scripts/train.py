@@ -24,9 +24,10 @@ LOG_PATH = PROJECT_ROOT / "results" / "training_log.txt"
 # Training hyperparameters
 CONFIG = {
     "iters": 600,
-    "batch_size": 2,
-    "lora_layers": 8,
+    "batch_size": 1,
+    "num_layers": 8,
     "learning_rate": 1e-5,
+    "grad_checkpoint": True,
 }
 
 
@@ -47,17 +48,20 @@ def check_prerequisites():
 
 def build_command():
     """Build the mlx_lm.lora CLI command."""
-    return [
-        sys.executable, "-m", "mlx_lm.lora",
+    cmd = [
+        sys.executable, "-m", "mlx_lm", "lora",
         "--model", str(MODEL_PATH),
         "--data", str(DATA_PATH),
         "--train",
         "--iters", str(CONFIG["iters"]),
         "--batch-size", str(CONFIG["batch_size"]),
-        "--lora-layers", str(CONFIG["lora_layers"]),
+        "--num-layers", str(CONFIG["num_layers"]),
         "--learning-rate", str(CONFIG["learning_rate"]),
         "--adapter-path", str(ADAPTER_PATH),
     ]
+    if CONFIG.get("grad_checkpoint"):
+        cmd.append("--grad-checkpoint")
+    return cmd
 
 
 def print_config():
@@ -71,8 +75,9 @@ def print_config():
     print(f"  Log:           {LOG_PATH}")
     print(f"  Iterations:    {CONFIG['iters']}")
     print(f"  Batch size:    {CONFIG['batch_size']}")
-    print(f"  LoRA layers:   {CONFIG['lora_layers']}")
+    print(f"  Num layers:    {CONFIG['num_layers']}")
     print(f"  Learning rate: {CONFIG['learning_rate']}")
+    print(f"  Grad ckpt:     {CONFIG.get('grad_checkpoint', False)}")
     print("=" * 60)
 
 
