@@ -7,19 +7,19 @@
 
 ## Phase 1: FD/FI Taxonomy & Data Templates
 
-- [ ] **[Claude Code]** 1.1 Define FD/FI scenario taxonomy
-  - [ ] Create `scripts/generate_fdfi_dataset.py`
-  - [ ] Define four entry categories (FD, FI, FD+FI, TRIAGE) with characteristics
-  - [ ] Map each hardware domain to 3-5 specific diagnostic scenarios with data types, value ranges, anomaly signatures, root causes, and connecting physics
-  - [ ] Define TRIAGE scenarios (software, config, operator, measurement artifact causes)
-  - [ ] **TEST:** Script prints 30+ defined scenarios across multiple domains and all four categories
+- [x] **[Claude Code]** 1.1 Define FD/FI scenario taxonomy
+  - [x] Create `scripts/generate_fdfi_dataset.py`
+  - [x] Define four entry categories (FD, FI, FD+FI, TRIAGE) with characteristics
+  - [x] Map each hardware domain to 3-5 specific diagnostic scenarios with data types, value ranges, anomaly signatures, root causes, and connecting physics
+  - [x] Define TRIAGE scenarios (software, config, operator, measurement artifact causes)
+  - [x] **TEST:** Script prints 30+ defined scenarios across multiple domains and all four categories
 
-- [ ] **[Claude Code]** 1.2 Define data presentation templates
-  - [ ] Create templates for each measurement data type (TDR, Icc, IDCODE, thermal, SPC, eye diagram, etc.)
-  - [ ] Specify realistic parameter ranges per data type
-  - [ ] Define how anomalies manifest in each data type
-  - [ ] Create function to generate plausible synthetic data points
-  - [ ] **TEST:** 5 sample data presentations read like real diagnostic data with correct units and values
+- [x] **[Claude Code]** 1.2 Define data presentation templates
+  - [x] Create templates for each measurement data type (TDR, Icc, IDCODE, thermal, SPC, eye diagram, etc.)
+  - [x] Specify realistic parameter ranges per data type
+  - [x] Define how anomalies manifest in each data type
+  - [x] Create function to generate plausible synthetic data points
+  - [x] **TEST:** 5 sample data presentations read like real diagnostic data with correct units and values
 
 ---
 

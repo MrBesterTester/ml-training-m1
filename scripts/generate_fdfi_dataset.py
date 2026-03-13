@@ -655,6 +655,941 @@ SCENARIOS = [
 
 
 # ---------------------------------------------------------------------------
+# Data Presentation Templates  (Step 1.2)
+#
+# Each template defines how a measurement data type appears in the
+# instruction field of a training entry.  The `generate` callable
+# produces a realistic synthetic data snippet (nominal or anomalous).
+# ---------------------------------------------------------------------------
+
+def _fmt(val: float, decimals: int = 2) -> str:
+    """Format a float, stripping unnecessary trailing zeros."""
+    return f"{val:.{decimals}f}".rstrip("0").rstrip(".")
+
+
+def _jitter(center: float, pct: float = 0.03) -> float:
+    """Return center +/- pct uniform noise."""
+    return center * (1 + random.uniform(-pct, pct))
+
+
+DATA_TEMPLATES: dict[str, dict] = {
+
+    # ------------------------------------------------------------------
+    # TDR impedance sweep
+    # ------------------------------------------------------------------
+    "tdr_impedance": {
+        "display_name": "TDR Impedance Sweep",
+        "description": "Time-domain reflectometry impedance vs distance along a PCB trace",
+        "format": "tabular",
+        "parameters": {
+            "impedance": {"unit": "ohm", "nominal": 50, "range": (45, 55)},
+            "distance": {"unit": "mm", "step": 1, "range": (0, 100)},
+        },
+        "anomaly_modes": [
+            "localized dip (via transition, geometry change)",
+            "localized spike (open/crack)",
+            "gradual drift (dielectric thickness variation)",
+        ],
+        "generate": lambda anomaly=False: _generate_tdr(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # Eye diagram measurements
+    # ------------------------------------------------------------------
+    "eye_diagram": {
+        "display_name": "Eye Diagram Measurements",
+        "description": "Eye height, width, and jitter components at a high-speed receiver",
+        "format": "narrative",
+        "parameters": {
+            "eye_height": {"unit": "mV", "nominal": 150, "range": (120, 200)},
+            "eye_width": {"unit": "ps", "nominal": 55, "range": (45, 70)},
+            "rj": {"unit": "ps RMS", "nominal": 3.5, "range": (2, 6)},
+            "dj": {"unit": "ps", "nominal": 8, "range": (4, 15)},
+            "data_rate": {"unit": "Gbps", "nominal": 10, "range": (5, 28)},
+        },
+        "anomaly_modes": [
+            "eye height collapse (ISI, loss)",
+            "excessive DJ (impedance discontinuity)",
+            "excessive RJ (power supply noise)",
+        ],
+        "generate": lambda anomaly=False: _generate_eye_diagram(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # S-parameter crosstalk
+    # ------------------------------------------------------------------
+    "s_parameter_crosstalk": {
+        "display_name": "S-Parameter Crosstalk (NEXT/FEXT)",
+        "description": "Near-end and far-end crosstalk magnitude vs frequency",
+        "format": "tabular",
+        "parameters": {
+            "next": {"unit": "dB", "nominal": -45, "range": (-60, -30)},
+            "fext": {"unit": "dB", "nominal": -55, "range": (-70, -40)},
+            "frequency": {"unit": "GHz", "range": (0.1, 10)},
+        },
+        "anomaly_modes": [
+            "narrowband NEXT peak (resonant coupling)",
+            "broadband FEXT rise (parallel trace coupling)",
+        ],
+        "generate": lambda anomaly=False: _generate_s_param_xtalk(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # Icc distribution / histogram
+    # ------------------------------------------------------------------
+    "icc_distribution": {
+        "display_name": "Icc Distribution (Supply Current)",
+        "description": "Quiescent supply current histogram across a production lot",
+        "format": "narrative",
+        "parameters": {
+            "icc": {"unit": "mA", "nominal": 45, "range": (10, 200)},
+            "sigma": {"unit": "mA", "nominal": 3.2, "range": (1, 8)},
+            "sample_size": {"unit": "boards", "range": (100, 2000)},
+        },
+        "anomaly_modes": [
+            "mean shift (systematic offset)",
+            "bimodal distribution (mixed lots)",
+            "increased sigma (process spread)",
+        ],
+        "generate": lambda anomaly=False: _generate_icc_distribution(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # IDCODE register reads
+    # ------------------------------------------------------------------
+    "idcode_reads": {
+        "display_name": "JTAG IDCODE Register Reads",
+        "description": "Consecutive IDCODE reads from devices in a JTAG chain",
+        "format": "list",
+        "parameters": {
+            "idcode": {"unit": "hex (32-bit)", "example": "0x0BA00477"},
+            "chain_length": {"range": (3, 12)},
+            "num_reads": {"range": (3, 10)},
+        },
+        "anomaly_modes": [
+            "bit flip (marginal signal integrity)",
+            "all-ones read (open connection)",
+            "wrong IDCODE (device mismatch)",
+        ],
+        "generate": lambda anomaly=False: _generate_idcode_reads(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # IR thermal grid
+    # ------------------------------------------------------------------
+    "thermal_grid": {
+        "display_name": "IR Camera Thermal Grid",
+        "description": "Infrared temperature readings on a spatial grid over a board region",
+        "format": "tabular",
+        "parameters": {
+            "temperature": {"unit": "°C", "nominal": 50, "range": (25, 95)},
+            "grid_size": {"rows": 6, "cols": 6, "spacing_mm": 5},
+        },
+        "anomaly_modes": [
+            "localized hot spot (excess power dissipation)",
+            "thermal gradient (blocked airflow)",
+            "cold spot (open thermal path)",
+        ],
+        "generate": lambda anomaly=False: _generate_thermal_grid(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # Temperature vs time profile
+    # ------------------------------------------------------------------
+    "temp_vs_time": {
+        "display_name": "Temperature vs Time Profile",
+        "description": "Thermocouple reading on a component over a powered test interval",
+        "format": "tabular",
+        "parameters": {
+            "temperature": {"unit": "°C", "nominal_steady": 75, "range": (25, 130)},
+            "time": {"unit": "s", "range": (0, 120), "step": 5},
+        },
+        "anomaly_modes": [
+            "thermal runaway (exponential rise, no steady state)",
+            "delayed settling (poor thermal path)",
+            "oscillation (control loop instability)",
+        ],
+        "generate": lambda anomaly=False: _generate_temp_vs_time(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # ESR measurements
+    # ------------------------------------------------------------------
+    "esr_readings": {
+        "display_name": "Capacitor ESR Readings",
+        "description": "Equivalent series resistance measurements across a production lot",
+        "format": "narrative",
+        "parameters": {
+            "esr": {"unit": "ohm", "nominal": 0.8, "range": (0.1, 3.0)},
+            "sigma": {"unit": "ohm", "nominal": 0.15, "range": (0.05, 0.5)},
+            "sample_size": {"unit": "boards", "range": (50, 500)},
+        },
+        "anomaly_modes": [
+            "bimodal distribution (mixed component lots)",
+            "high-tail outliers (degraded capacitors)",
+        ],
+        "generate": lambda anomaly=False: _generate_esr_readings(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # Resistance (guarded vs unguarded)
+    # ------------------------------------------------------------------
+    "resistance_measurement": {
+        "display_name": "Resistance Measurement (ICT)",
+        "description": "Guarded and/or unguarded resistance readings for a component under test",
+        "format": "narrative",
+        "parameters": {
+            "resistance": {"unit": "ohm", "range": (10, 1_000_000)},
+            "tolerance": {"unit": "%", "nominal": 5, "range": (1, 10)},
+        },
+        "anomaly_modes": [
+            "parallel path error (guarded vs unguarded diverge)",
+            "out-of-tolerance (wrong component)",
+            "open circuit (no solder joint)",
+        ],
+        "generate": lambda anomaly=False: _generate_resistance(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # INL / DNL (ADC linearity)
+    # ------------------------------------------------------------------
+    "inl_dnl": {
+        "display_name": "ADC INL/DNL Measurements",
+        "description": "Integral and differential nonlinearity across ADC codes",
+        "format": "tabular",
+        "parameters": {
+            "resolution_bits": {"range": (10, 16)},
+            "inl": {"unit": "LSB", "spec": 1.0},
+            "dnl": {"unit": "LSB", "spec": 0.5},
+        },
+        "anomaly_modes": [
+            "mid-scale INL spike (MSB capacitor mismatch)",
+            "DNL spikes at major carry transitions",
+            "monotonicity violation (missing codes)",
+        ],
+        "generate": lambda anomaly=False: _generate_inl_dnl(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # Period jitter histogram
+    # ------------------------------------------------------------------
+    "period_jitter": {
+        "display_name": "Clock Period Jitter Histogram",
+        "description": "Consecutive period measurements of a reference clock",
+        "format": "narrative",
+        "parameters": {
+            "period": {"unit": "ns", "nominal": 10.0},
+            "sigma": {"unit": "ps RMS", "nominal": 4, "range": (1, 15)},
+            "sample_size": {"range": (5000, 50000)},
+        },
+        "anomaly_modes": [
+            "bimodal distribution (deterministic jitter from supply coupling)",
+            "fat tails (random jitter from noisy reference)",
+        ],
+        "generate": lambda anomaly=False: _generate_period_jitter(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # FFT spectrum (ADC / DAC output)
+    # ------------------------------------------------------------------
+    "fft_spectrum": {
+        "display_name": "FFT Spectrum (ADC/DAC Output)",
+        "description": "Frequency-domain spectrum of a converter output",
+        "format": "tabular",
+        "parameters": {
+            "noise_floor": {"unit": "dBFS", "nominal": -110, "range": (-120, -85)},
+            "bandwidth": {"unit": "MHz", "range": (0.01, 10)},
+            "fft_size": {"range": (1024, 16384)},
+        },
+        "anomaly_modes": [
+            "elevated noise floor (supply noise, degraded ENOB)",
+            "discrete spurs (switching regulator, ground loop)",
+            "harmonic distortion (nonlinearity)",
+        ],
+        "generate": lambda anomaly=False: _generate_fft_spectrum(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # Cpk trend
+    # ------------------------------------------------------------------
+    "cpk_trend": {
+        "display_name": "Cpk Trend (Process Capability)",
+        "description": "Weekly process capability index for a critical measurement",
+        "format": "tabular",
+        "parameters": {
+            "cpk": {"unit": "dimensionless", "nominal": 1.67, "range": (0.5, 3.0)},
+            "weeks": {"range": (8, 30)},
+        },
+        "anomaly_modes": [
+            "steady decline (mean drift toward spec limit)",
+            "step change (process shift event)",
+            "oscillation (overcorrection / hunting)",
+        ],
+        "generate": lambda anomaly=False: _generate_cpk_trend(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # SPC X-bar chart
+    # ------------------------------------------------------------------
+    "xbar_chart": {
+        "display_name": "X-bar Control Chart",
+        "description": "Subgroup means over time for a measured parameter",
+        "format": "tabular",
+        "parameters": {
+            "center": {"unit": "ohm", "nominal": 50.0},
+            "sigma": {"unit": "ohm", "nominal": 0.8},
+            "subgroup_size": {"range": (3, 7)},
+            "num_subgroups": {"range": (20, 40)},
+        },
+        "anomaly_modes": [
+            "run above center line (Western Electric Rule 2)",
+            "trend (6+ points monotonically increasing)",
+            "point beyond 3-sigma (special cause)",
+        ],
+        "generate": lambda anomaly=False: _generate_xbar_chart(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # Weibull parameters
+    # ------------------------------------------------------------------
+    "weibull_params": {
+        "display_name": "Weibull Reliability Parameters",
+        "description": "Shape (beta) and scale (eta) from life-test data",
+        "format": "narrative",
+        "parameters": {
+            "beta": {"unit": "dimensionless", "nominal": 3.2, "range": (0.5, 6)},
+            "eta": {"unit": "hours", "nominal": 5000, "range": (500, 50000)},
+            "sample_size": {"range": (15, 50)},
+        },
+        "anomaly_modes": [
+            "beta shift toward 1 (mixed failure modes)",
+            "eta reduction (accelerated wear-out)",
+        ],
+        "generate": lambda anomaly=False: _generate_weibull(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # PDN impedance sweep
+    # ------------------------------------------------------------------
+    "pdn_impedance": {
+        "display_name": "PDN Impedance Sweep Z(f)",
+        "description": "Power distribution network impedance vs frequency at IC pad",
+        "format": "tabular",
+        "parameters": {
+            "impedance": {"unit": "ohm", "target": 0.5, "range": (0.01, 5)},
+            "frequency": {"unit": "MHz", "range": (1, 1000)},
+        },
+        "anomaly_modes": [
+            "anti-resonance peak (LC tank, missing decoupling)",
+            "high-frequency rise (insufficient high-freq caps)",
+        ],
+        "generate": lambda anomaly=False: _generate_pdn_impedance(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # Capacitive coupling (opens detection)
+    # ------------------------------------------------------------------
+    "capacitive_coupling": {
+        "display_name": "Capacitive Coupling Measurement",
+        "description": "Non-contact capacitive measurement at a pad or lead",
+        "format": "narrative",
+        "parameters": {
+            "capacitance": {"unit": "pF", "nominal": 1.8, "range": (0.1, 10)},
+        },
+        "anomaly_modes": [
+            "severely reduced (open joint, lifted pad)",
+            "elevated (solder bridge adding area)",
+        ],
+        "generate": lambda anomaly=False: _generate_capacitive_coupling(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # Yield by week
+    # ------------------------------------------------------------------
+    "yield_trend": {
+        "display_name": "Production Yield Trend",
+        "description": "Weekly first-pass yield with lot traceability",
+        "format": "tabular",
+        "parameters": {
+            "yield_pct": {"unit": "%", "nominal": 98.5, "range": (70, 100)},
+            "weeks": {"range": (8, 20)},
+        },
+        "anomaly_modes": [
+            "sudden dip (component lot issue)",
+            "gradual decline (process drift)",
+            "step change (design revision impact)",
+        ],
+        "generate": lambda anomaly=False: _generate_yield_trend(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # Pass/fail vs voltage sweep (voltage margining)
+    # ------------------------------------------------------------------
+    "voltage_margining": {
+        "display_name": "Voltage Margining Test Results",
+        "description": "Functional pass/fail at each voltage step across the operating range",
+        "format": "tabular",
+        "parameters": {
+            "voltage": {"unit": "V", "nominal": 5.0, "range": (3.0, 12.0)},
+            "step": {"unit": "mV", "nominal": 50},
+        },
+        "anomaly_modes": [
+            "reduced low-margin (timing margin erosion)",
+            "reduced high-margin (latch-up susceptibility)",
+            "asymmetric margin (single-rail sensitivity)",
+        ],
+        "generate": lambda anomaly=False: _generate_voltage_margining(anomaly),
+    },
+
+    # ------------------------------------------------------------------
+    # HALT step-stress results
+    # ------------------------------------------------------------------
+    "halt_step_stress": {
+        "display_name": "HALT Temperature Step-Stress Results",
+        "description": "Unit failures at each temperature step in HALT testing",
+        "format": "tabular",
+        "parameters": {
+            "temperature": {"unit": "°C", "range": (25, 125), "step": 10},
+            "units_per_batch": {"range": (15, 30)},
+        },
+        "anomaly_modes": [
+            "early failure cluster (lower activation energy)",
+            "bimodal failure pattern (two failure mechanisms)",
+        ],
+        "generate": lambda anomaly=False: _generate_halt_stress(anomaly),
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# Synthetic data generators
+# ---------------------------------------------------------------------------
+
+def _generate_tdr(anomaly: bool = False) -> str:
+    """Generate a TDR impedance sweep data presentation."""
+    trace_len = random.randint(60, 120)
+    z_nom = random.choice([50, 75, 100])
+    tol = z_nom * 0.05
+
+    points = []
+    for d in range(0, trace_len + 1, 2):
+        z = _jitter(z_nom, 0.02)
+        if anomaly and 40 <= d <= 46:
+            # Localized dip at a via transition
+            depth = random.uniform(10, 18)
+            z = z_nom - depth * max(0, 1 - abs(d - 43) / 4)
+        points.append((d, round(z, 1)))
+
+    lines = [f"TDR impedance sweep on a {trace_len} mm differential pair (target Z0 = {z_nom} ohm):"]
+    lines.append(f"  {'Distance (mm)':>14s}  {'Z (ohm)':>8s}")
+    # Show every 4th point to keep it readable
+    for d, z in points[::2]:
+        lines.append(f"  {d:>14d}  {z:>8.1f}")
+    return "\n".join(lines)
+
+
+def _generate_eye_diagram(anomaly: bool = False) -> str:
+    """Generate eye diagram measurement data."""
+    rate = random.choice([5.0, 8.0, 10.0, 12.5, 25.0])
+    eh_nom = random.uniform(130, 180)
+    ew_nom = random.uniform(48, 65)
+    rj = random.uniform(2.5, 5.0)
+    dj = random.uniform(5, 12)
+
+    if anomaly:
+        eh = round(eh_nom * random.uniform(0.4, 0.55), 1)
+        dj = round(dj * random.uniform(2.0, 3.5), 1)
+    else:
+        eh = round(eh_nom, 1)
+        dj = round(dj, 1)
+
+    ew = round(ew_nom * (eh / eh_nom) * random.uniform(0.9, 1.0), 1)
+    tj = round((rj * 14) + dj, 1)  # TJ at BER 1e-12 ≈ 14*RJ + DJ
+
+    return (
+        f"Eye diagram measurements at {rate} Gbps (differential receiver, 10,000 UI acquisition):\n"
+        f"  Eye height:    {eh} mV\n"
+        f"  Eye width:     {ew} ps\n"
+        f"  Random jitter: {_fmt(rj, 2)} ps RMS\n"
+        f"  Determ. jitter:{dj} ps\n"
+        f"  Total jitter:  {tj} ps (at BER = 1e-12)\n"
+        f"  Spec limits:   eye height > 120 mV, eye width > 45 ps, TJ < 35 ps"
+    )
+
+
+def _generate_s_param_xtalk(anomaly: bool = False) -> str:
+    """Generate S-parameter crosstalk data."""
+    freqs = [0.1, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0]
+    lines = ["Near-end crosstalk (NEXT) measurement, 4 aggressor-victim pairs:"]
+    lines.append(f"  {'Freq (GHz)':>10s}  {'Pair 1':>8s}  {'Pair 2':>8s}  {'Pair 3':>8s}  {'Pair 4':>8s}")
+
+    anomaly_freq = random.choice([2.0, 3.0, 4.0, 5.0])
+    for f in freqs:
+        vals = []
+        for pair in range(4):
+            base = -48 + f * 1.2 + random.uniform(-1.5, 1.5)
+            if anomaly and pair == 2 and abs(f - anomaly_freq) < 0.6:
+                base = -22 + random.uniform(-2, 2)  # Resonant coupling peak
+            vals.append(round(base, 1))
+        lines.append(f"  {f:>10.1f}  {vals[0]:>8.1f}  {vals[1]:>8.1f}  {vals[2]:>8.1f}  {vals[3]:>8.1f}")
+    lines.append(f"  Spec: NEXT < -40 dB across frequency range")
+    return "\n".join(lines)
+
+
+def _generate_icc_distribution(anomaly: bool = False) -> str:
+    """Generate Icc distribution summary."""
+    n = random.choice([200, 500, 1000])
+    nom_mean = random.uniform(20, 120)
+    nom_sigma = nom_mean * random.uniform(0.05, 0.10)
+
+    if anomaly:
+        mode = random.choice(["shift", "bimodal"])
+        if mode == "shift":
+            shift = nom_mean * random.uniform(0.3, 0.6)
+            return (
+                f"Icc (quiescent supply current) distribution for U12 across {n} boards:\n"
+                f"  Historical baseline: mean = {_fmt(nom_mean, 1)} mA, sigma = {_fmt(nom_sigma, 1)} mA (from first 2,000 boards)\n"
+                f"  Current lot (last {n} boards): mean = {_fmt(nom_mean + shift, 1)} mA, sigma = {_fmt(nom_sigma * 0.97, 1)} mA\n"
+                f"  Shift: +{_fmt(shift, 1)} mA ({_fmt(shift / nom_mean * 100, 0)}% above historical mean)\n"
+                f"  Sigma unchanged — distribution shifted, not broadened"
+            )
+        else:
+            peak2 = nom_mean * random.uniform(1.4, 1.8)
+            return (
+                f"Icc distribution for U12 across {n} boards:\n"
+                f"  Distribution is bimodal:\n"
+                f"    Peak A: {_fmt(nom_mean, 1)} mA ({random.randint(55, 70)}% of population)\n"
+                f"    Peak B: {_fmt(peak2, 1)} mA ({random.randint(30, 45)}% of population)\n"
+                f"  Combined mean: {_fmt((nom_mean + peak2) / 2, 1)} mA\n"
+                f"  No overlap between peaks — clear separation"
+            )
+    else:
+        return (
+            f"Icc (quiescent supply current) distribution for U12 across {n} boards:\n"
+            f"  Mean: {_fmt(nom_mean, 1)} mA\n"
+            f"  Sigma: {_fmt(nom_sigma, 1)} mA\n"
+            f"  Min: {_fmt(nom_mean - 3.1 * nom_sigma, 1)} mA, Max: {_fmt(nom_mean + 2.8 * nom_sigma, 1)} mA\n"
+            f"  Distribution: unimodal, approximately Gaussian\n"
+            f"  All readings within spec limits ({_fmt(nom_mean * 0.5, 0)} mA to {_fmt(nom_mean * 2, 0)} mA)"
+        )
+
+
+def _generate_idcode_reads(anomaly: bool = False) -> str:
+    """Generate JTAG IDCODE read data."""
+    chain_len = random.randint(4, 8)
+    idcodes = [random.randint(0x00100000, 0x0FFFFFFF) | 1 for _ in range(chain_len)]
+    num_reads = random.randint(4, 7)
+
+    lines = [f"JTAG chain: {chain_len} devices, {num_reads} consecutive IDCODE reads:"]
+    for dev in range(chain_len):
+        readings = []
+        for r in range(num_reads):
+            code = idcodes[dev]
+            if anomaly and dev == chain_len // 2 and random.random() < 0.4:
+                # Flip a high-order bit intermittently
+                bit = random.choice([24, 26, 28])
+                code ^= (1 << bit)
+            readings.append(f"0x{code:08X}")
+        lines.append(f"  Device {dev + 1}: {', '.join(readings)}")
+    return "\n".join(lines)
+
+
+def _generate_thermal_grid(anomaly: bool = False) -> str:
+    """Generate IR thermal grid data."""
+    rows, cols = 6, 6
+    t_base = random.uniform(40, 55)
+    spacing = 5
+
+    grid = []
+    for r in range(rows):
+        row_vals = []
+        for c in range(cols):
+            t = _jitter(t_base, 0.03)
+            if anomaly and 2 <= r <= 3 and 2 <= c <= 3:
+                t += random.uniform(12, 20)  # Hot spot in center
+            row_vals.append(round(t, 1))
+        grid.append(row_vals)
+
+    lines = [f"IR thermal image, {rows}x{cols} grid ({spacing} mm spacing), board under load:"]
+    header = "       " + "  ".join(f"{c * spacing:>5d}mm" for c in range(cols))
+    lines.append(header)
+    for r in range(rows):
+        label = f"{r * spacing:>3d}mm  "
+        vals = "  ".join(f"{grid[r][c]:>5.1f}°" for c in range(cols))
+        lines.append(label + vals)
+    return "\n".join(lines)
+
+
+def _generate_temp_vs_time(anomaly: bool = False) -> str:
+    """Generate temperature vs time profile."""
+    t_ambient = random.uniform(22, 28)
+    t_steady = random.uniform(65, 85)
+    tau = random.uniform(8, 15)  # thermal time constant
+
+    lines = ["Thermocouple reading on Q3 (power MOSFET) during powered test:"]
+    lines.append(f"  {'Time (s)':>8s}  {'Temp (°C)':>10s}")
+    for t in range(0, 125, 5):
+        if anomaly:
+            # Thermal runaway — exponential, no settling
+            temp = t_ambient + (t_steady - t_ambient) * (1 - 2.718 ** (-t / tau))
+            if t > 30:
+                temp += 0.015 * (t - 30) ** 1.8  # Accelerating above expected
+        else:
+            temp = t_ambient + (t_steady - t_ambient) * (1 - 2.718 ** (-t / tau))
+        lines.append(f"  {t:>8d}  {temp:>10.1f}")
+    return "\n".join(lines)
+
+
+def _generate_esr_readings(anomaly: bool = False) -> str:
+    """Generate capacitor ESR distribution data."""
+    n = random.choice([100, 200, 500])
+    nom = random.uniform(0.5, 1.5)
+    sigma = nom * 0.15
+
+    if anomaly:
+        peak2 = nom * random.uniform(1.6, 2.2)
+        return (
+            f"ESR measurements for C47 (100 nF MLCC, X7R) across {n} boards:\n"
+            f"  Distribution: bimodal\n"
+            f"    Population A: mean = {_fmt(nom, 2)} ohm, sigma = {_fmt(sigma, 2)} ohm ({random.randint(55, 65)}% of units)\n"
+            f"    Population B: mean = {_fmt(peak2, 2)} ohm, sigma = {_fmt(sigma * 1.1, 2)} ohm ({random.randint(35, 45)}% of units)\n"
+            f"  Spec limit: ESR < {_fmt(nom * 3, 1)} ohm"
+        )
+    else:
+        return (
+            f"ESR measurements for C47 (100 nF MLCC, X7R) across {n} boards:\n"
+            f"  Mean: {_fmt(nom, 2)} ohm\n"
+            f"  Sigma: {_fmt(sigma, 2)} ohm\n"
+            f"  Distribution: unimodal, Gaussian\n"
+            f"  Range: {_fmt(nom - 2.8 * sigma, 2)} to {_fmt(nom + 3.1 * sigma, 2)} ohm\n"
+            f"  All within spec (ESR < {_fmt(nom * 3, 1)} ohm)"
+        )
+
+
+def _generate_resistance(anomaly: bool = False) -> str:
+    """Generate resistance measurement data (guarded vs unguarded)."""
+    r_nom = random.choice([1000, 4700, 10000, 47000, 100000])
+    tol_pct = random.choice([1, 2, 5])
+    r_actual = r_nom * random.uniform(1 - tol_pct / 200, 1 + tol_pct / 200)
+
+    def _r_str(val: float) -> str:
+        if val >= 1e6:
+            return f"{val / 1e6:.2f} Mohm"
+        elif val >= 1e3:
+            return f"{val / 1e3:.2f} kohm"
+        return f"{val:.1f} ohm"
+
+    if anomaly:
+        r_parallel = random.choice([r_nom, r_nom * 2, r_nom // 2])
+        r_unguarded = (r_actual * r_parallel) / (r_actual + r_parallel)
+        return (
+            f"Component: R23, nominal {_r_str(r_nom)} ±{tol_pct}%\n"
+            f"  Unguarded measurement: {_r_str(r_unguarded)}\n"
+            f"  Guarded measurement:   {_r_str(r_actual)}\n"
+            f"  Spec range: {_r_str(r_nom * (1 - tol_pct / 100))} to {_r_str(r_nom * (1 + tol_pct / 100))}\n"
+            f"  Guarded reading within spec; unguarded reading out-of-spec"
+        )
+    else:
+        return (
+            f"Component: R23, nominal {_r_str(r_nom)} ±{tol_pct}%\n"
+            f"  4-wire measurement: {_r_str(r_actual)}\n"
+            f"  Spec range: {_r_str(r_nom * (1 - tol_pct / 100))} to {_r_str(r_nom * (1 + tol_pct / 100))}\n"
+            f"  Reading within spec"
+        )
+
+
+def _generate_inl_dnl(anomaly: bool = False) -> str:
+    """Generate ADC INL/DNL data."""
+    bits = random.choice([12, 14])
+    codes = 2 ** bits
+
+    if anomaly:
+        mid = codes // 2
+        return (
+            f"{bits}-bit SAR ADC INL/DNL ramp test ({codes} codes, {codes * 256} samples):\n"
+            f"  DNL: within ±0.4 LSB for most codes\n"
+            f"        spikes to +1.2 LSB at codes {mid - 1} and {mid} (major carry transition)\n"
+            f"  INL: within ±0.8 LSB below code {mid - 200} and above code {mid + 200}\n"
+            f"        peaks at +{_fmt(random.uniform(1.8, 2.5), 1)} LSB at code {mid} (mid-scale)\n"
+            f"  Spec: INL < ±1.0 LSB, DNL < ±0.5 LSB"
+        )
+    else:
+        return (
+            f"{bits}-bit SAR ADC INL/DNL ramp test ({codes} codes, {codes * 256} samples):\n"
+            f"  DNL: max +{_fmt(random.uniform(0.2, 0.4), 2)} / -{_fmt(random.uniform(0.1, 0.3), 2)} LSB\n"
+            f"  INL: max +{_fmt(random.uniform(0.4, 0.8), 2)} / -{_fmt(random.uniform(0.3, 0.7), 2)} LSB\n"
+            f"  No missing codes detected\n"
+            f"  Spec: INL < ±1.0 LSB, DNL < ±0.5 LSB — PASS"
+        )
+
+
+def _generate_period_jitter(anomaly: bool = False) -> str:
+    """Generate clock period jitter data."""
+    freq_mhz = random.choice([100, 125, 156.25, 200])
+    period_ns = 1000 / freq_mhz
+    n = random.choice([10000, 50000])
+    sigma_ps = random.uniform(2, 6)
+
+    if anomaly:
+        sep_ps = random.uniform(12, 25)
+        return (
+            f"Period jitter measurement, {freq_mhz} MHz clock ({n} consecutive periods):\n"
+            f"  Distribution: bimodal\n"
+            f"    Peak A: {_fmt(period_ns - sep_ps / 2000, 4)} ns\n"
+            f"    Peak B: {_fmt(period_ns + sep_ps / 2000, 4)} ns\n"
+            f"  Separation: {_fmt(sep_ps, 1)} ps\n"
+            f"  RMS jitter: {_fmt(sigma_ps * 1.8, 1)} ps (elevated due to deterministic component)\n"
+            f"  Spec: period jitter < {_fmt(sigma_ps * 2, 0)} ps RMS"
+        )
+    else:
+        return (
+            f"Period jitter measurement, {freq_mhz} MHz clock ({n} consecutive periods):\n"
+            f"  Mean period: {_fmt(period_ns, 4)} ns\n"
+            f"  RMS jitter: {_fmt(sigma_ps, 1)} ps\n"
+            f"  Peak-to-peak: {_fmt(sigma_ps * 6.5, 1)} ps\n"
+            f"  Distribution: Gaussian (no deterministic component visible)\n"
+            f"  Spec: period jitter < {_fmt(sigma_ps * 2.5, 0)} ps RMS — PASS"
+        )
+
+
+def _generate_fft_spectrum(anomaly: bool = False) -> str:
+    """Generate FFT spectrum data."""
+    fft_size = random.choice([4096, 8192])
+    fs_mhz = random.choice([1.0, 10.0, 50.0])
+    floor_nom = random.uniform(-112, -95)
+
+    if anomaly:
+        spur_freqs = [60e-6, 120e-6, 180e-6, 240e-6]  # 60 Hz harmonics in MHz
+        if fs_mhz >= 10:
+            spur_freqs = [1.2, 2.4]  # Switching regulator harmonics
+        floor_bad = floor_nom + random.uniform(8, 15)
+        lines = [f"{fft_size}-point FFT of 12-bit ADC output (Fs = {fs_mhz} MHz, DC input):"]
+        lines.append(f"  Noise floor: {_fmt(floor_bad, 1)} dBFS (spec: < {_fmt(floor_nom, 0)} dBFS)")
+        lines.append(f"  Discrete spurs detected:")
+        for sf in spur_freqs:
+            spur_level = random.uniform(-75, -62)
+            if sf < 0.001:
+                lines.append(f"    {sf * 1e6:.0f} Hz: {_fmt(spur_level, 1)} dBFS")
+            else:
+                lines.append(f"    {sf} MHz: {_fmt(spur_level, 1)} dBFS")
+        lines.append(f"  Spec: noise floor < {_fmt(floor_nom, 0)} dBFS, no spurs > -80 dBFS")
+        return "\n".join(lines)
+    else:
+        return (
+            f"{fft_size}-point FFT of 12-bit ADC output (Fs = {fs_mhz} MHz, DC input):\n"
+            f"  Noise floor: {_fmt(floor_nom, 1)} dBFS\n"
+            f"  No discrete spurs above -85 dBFS\n"
+            f"  SFDR: {_fmt(abs(floor_nom) + random.uniform(5, 15), 1)} dB\n"
+            f"  Spec: noise floor < {_fmt(floor_nom + 10, 0)} dBFS — PASS"
+        )
+
+
+def _generate_cpk_trend(anomaly: bool = False) -> str:
+    """Generate Cpk trend data."""
+    weeks = random.randint(12, 20)
+    cpk_start = random.uniform(1.6, 2.0)
+
+    lines = ["Weekly Cpk trend for critical voltage measurement (VCC_CORE):"]
+    lines.append(f"  {'Week':>6s}  {'Cpk':>6s}  {'Status':>10s}")
+    for w in range(1, weeks + 1):
+        if anomaly:
+            cpk = cpk_start - (w - 1) * random.uniform(0.035, 0.055)
+        else:
+            cpk = cpk_start + random.uniform(-0.08, 0.08)
+        status = "OK" if cpk >= 1.33 else "WARNING" if cpk >= 1.0 else "CRITICAL"
+        lines.append(f"  {w:>6d}  {cpk:>6.2f}  {status:>10s}")
+    lines.append(f"  Threshold: Cpk >= 1.33 (4-sigma capability)")
+    return "\n".join(lines)
+
+
+def _generate_xbar_chart(anomaly: bool = False) -> str:
+    """Generate X-bar control chart data."""
+    center = random.uniform(48, 52)
+    sigma = random.uniform(0.5, 1.2)
+    n_sg = random.randint(25, 35)
+    sg_size = 5
+    ucl = center + 3 * sigma / (sg_size ** 0.5)
+    lcl = center - 3 * sigma / (sg_size ** 0.5)
+
+    lines = [f"X-bar control chart (subgroup size n={sg_size}, {n_sg} subgroups):"]
+    lines.append(f"  Center line: {_fmt(center, 2)} ohm")
+    lines.append(f"  UCL: {_fmt(ucl, 2)} ohm, LCL: {_fmt(lcl, 2)} ohm")
+    lines.append(f"  {'Subgroup':>10s}  {'X-bar (ohm)':>12s}")
+
+    shift_start = random.randint(10, 18)
+    for sg in range(1, n_sg + 1):
+        xbar = center + random.gauss(0, sigma / (sg_size ** 0.5))
+        if anomaly and sg >= shift_start and sg < shift_start + 9:
+            xbar = center + abs(random.gauss(0, sigma / (sg_size ** 0.5))) + sigma / (sg_size ** 0.5) * 0.5
+        lines.append(f"  {sg:>10d}  {xbar:>12.2f}")
+    return "\n".join(lines)
+
+
+def _generate_weibull(anomaly: bool = False) -> str:
+    """Generate Weibull parameter comparison data."""
+    beta_nom = random.uniform(2.8, 4.0)
+    eta_nom = random.randint(3000, 8000)
+    n = random.randint(18, 25)
+
+    if anomaly:
+        beta_new = random.uniform(1.2, 2.0)
+        eta_new = int(eta_nom * random.uniform(1.2, 1.6))
+        return (
+            f"Weibull analysis from HALT testing ({n} units per batch):\n"
+            f"  Batch 1 (baseline): beta = {_fmt(beta_nom, 2)}, eta = {eta_nom} hours\n"
+            f"  Batch 2 (current):  beta = {_fmt(beta_new, 2)}, eta = {eta_new} hours\n"
+            f"  Beta shift: {_fmt(beta_nom, 2)} → {_fmt(beta_new, 2)} (toward random failure mode)\n"
+            f"  Correlation coefficient R² > 0.95 for both fits"
+        )
+    else:
+        return (
+            f"Weibull analysis from HALT testing ({n} units per batch):\n"
+            f"  Beta (shape): {_fmt(beta_nom, 2)} (indicates wear-out failure mode)\n"
+            f"  Eta (characteristic life): {eta_nom} hours\n"
+            f"  B10 life: {int(eta_nom * 0.45)} hours\n"
+            f"  Correlation coefficient R² = {_fmt(random.uniform(0.96, 0.99), 3)}"
+        )
+
+
+def _generate_pdn_impedance(anomaly: bool = False) -> str:
+    """Generate PDN impedance sweep data."""
+    freqs = [1, 5, 10, 20, 50, 100, 150, 200, 300, 500, 800, 1000]
+    z_target = 0.5
+
+    lines = ["PDN impedance Z(f) measured at U1 VDD pad:"]
+    lines.append(f"  {'Freq (MHz)':>10s}  {'|Z| (ohm)':>10s}")
+    for f in freqs:
+        if f < 50:
+            z = random.uniform(0.05, 0.2)
+        elif f < 200:
+            z = random.uniform(0.1, 0.4)
+            if anomaly and 120 <= f <= 180:
+                z = random.uniform(1.5, 2.5)  # Anti-resonance peak
+        else:
+            z = random.uniform(0.15, 0.45)
+        lines.append(f"  {f:>10d}  {z:>10.3f}")
+    lines.append(f"  Target impedance: < {z_target} ohm from DC to 500 MHz")
+    return "\n".join(lines)
+
+
+def _generate_capacitive_coupling(anomaly: bool = False) -> str:
+    """Generate capacitive coupling measurement data."""
+    c_nom = random.uniform(1.2, 3.5)
+    ref = f"known-good board average: {_fmt(c_nom, 1)} pF"
+
+    if anomaly:
+        c_meas = c_nom * random.uniform(0.05, 0.15)
+        return (
+            f"Capacitive opens detection on U8 center pad (QFN-48):\n"
+            f"  Measured coupling: {_fmt(c_meas, 2)} pF\n"
+            f"  Reference ({ref})\n"
+            f"  Delta: {_fmt((c_meas / c_nom - 1) * 100, 0)}% below reference\n"
+            f"  Threshold for FAIL: < {_fmt(c_nom * 0.5, 1)} pF"
+        )
+    else:
+        c_meas = c_nom * random.uniform(0.92, 1.08)
+        return (
+            f"Capacitive opens detection on U8 center pad (QFN-48):\n"
+            f"  Measured coupling: {_fmt(c_meas, 2)} pF\n"
+            f"  Reference ({ref})\n"
+            f"  Delta: {_fmt((c_meas / c_nom - 1) * 100, 1)}% from reference\n"
+            f"  Threshold for FAIL: < {_fmt(c_nom * 0.5, 1)} pF — PASS"
+        )
+
+
+def _generate_yield_trend(anomaly: bool = False) -> str:
+    """Generate production yield trend data."""
+    weeks = random.randint(10, 16)
+    y_nom = random.uniform(97.5, 99.2)
+    dip_week = random.randint(4, weeks - 3)
+
+    lines = ["Weekly first-pass yield (FPY) with lot traceability:"]
+    lines.append(f"  {'Week':>6s}  {'FPY (%)':>8s}  {'Lot Code':>12s}")
+    for w in range(1, weeks + 1):
+        lot = f"2026-W{w + 9:02d}"
+        if anomaly and w == dip_week:
+            y = random.uniform(78, 86)
+        elif anomaly and w == dip_week + 1:
+            y = random.uniform(88, 93)
+        else:
+            y = y_nom + random.uniform(-1.2, 1.2)
+        lines.append(f"  {w:>6d}  {y:>8.1f}  {lot:>12s}")
+    lines.append(f"  Target: FPY > 98% sustained")
+    return "\n".join(lines)
+
+
+def _generate_voltage_margining(anomaly: bool = False) -> str:
+    """Generate voltage margining test results."""
+    v_nom = random.choice([3.3, 5.0])
+    v_range = v_nom * 0.1  # ±10%
+    step = 0.05 if v_nom < 4 else 0.05
+
+    lines = [f"Voltage margining test (nominal {v_nom}V, ±10% range):"]
+    lines.append(f"  {'Voltage (V)':>12s}  {'Result':>8s}")
+    fail_low = v_nom * (1 - 0.05) if anomaly else v_nom * (1 - 0.11)  # Only 5% margin if anomalous
+    for v_offset in range(-10, 11):
+        v = v_nom + v_offset * step
+        if v < v_nom * 0.88 or v > v_nom * 1.12:
+            continue
+        result = "PASS" if v >= fail_low else "FAIL"
+        lines.append(f"  {v:>12.2f}  {result:>8s}")
+    lines.append(f"  Spec: must pass across ±10% ({_fmt(v_nom * 0.9, 2)}V to {_fmt(v_nom * 1.1, 2)}V)")
+    return "\n".join(lines)
+
+
+def _generate_halt_stress(anomaly: bool = False) -> str:
+    """Generate HALT temperature step-stress data."""
+    n_units = random.randint(18, 25)
+    lines = [f"HALT temperature step-stress results ({n_units} units):"]
+    lines.append(f"  {'Step (°C)':>10s}  {'Failures':>10s}  {'Cumulative':>12s}")
+
+    cum = 0
+    for temp in range(25, 130, 10):
+        if anomaly and temp == 85:
+            fails = random.randint(2, 4)
+        elif temp >= 115:
+            fails = random.randint(0, 2)
+        elif temp >= 105:
+            fails = random.randint(0, 1)
+        else:
+            fails = 0
+        cum += fails
+        lines.append(f"  {temp:>10d}  {fails:>10d}  {cum:>12d}")
+    lines.append(f"  Operational limit: +105°C; destruct limit target: +115°C")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Sample data presentation display
+# ---------------------------------------------------------------------------
+
+def print_sample_data_presentations(n: int = 5) -> None:
+    """Generate and print n sample data presentations across different types."""
+    template_keys = list(DATA_TEMPLATES.keys())
+    selected = random.sample(template_keys, min(n, len(template_keys)))
+
+    print(f"\n{'=' * 76}")
+    print(f"SAMPLE DATA PRESENTATIONS ({n} of {len(DATA_TEMPLATES)} templates)")
+    print(f"{'=' * 76}")
+
+    for i, key in enumerate(selected, 1):
+        tmpl = DATA_TEMPLATES[key]
+        # Alternate nominal/anomalous to show both modes
+        is_anomaly = (i % 2 == 0)
+        data = tmpl["generate"](anomaly=is_anomaly)
+
+        print(f"\n--- [{i}] {tmpl['display_name']} ({'ANOMALOUS' if is_anomaly else 'NOMINAL'}) ---")
+        print(data)
+        print()
+
+    print(f"{'=' * 76}")
+    print(f"Templates defined: {len(DATA_TEMPLATES)}")
+    print(f"All templates have generate() function: "
+          f"{'PASS' if all('generate' in t for t in DATA_TEMPLATES.values()) else 'FAIL'}")
+    print(f"{'=' * 76}")
+
+
+# ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
 
@@ -743,7 +1678,7 @@ def print_summary() -> None:
 
 
 def main() -> None:
-    """Print summary, sample scenarios, and pass/fail verdict."""
+    """Print summary, sample scenarios, data presentations, and pass/fail verdict."""
     print_summary()
 
     # Print 3 sample scenarios (one FD, one FI, one TRIAGE)
@@ -815,6 +1750,9 @@ def main() -> None:
         and not missing_keys
     )
     print(f"\n  OVERALL: {'PASS' if all_pass else 'FAIL'}")
+
+    # Step 1.2: Data presentation templates
+    print_sample_data_presentations(5)
 
 
 if __name__ == "__main__":

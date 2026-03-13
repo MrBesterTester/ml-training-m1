@@ -1,0 +1,129 @@
+
+====================================================================
+FD/FI SCENARIO TAXONOMY — CROSS-TABULATION
+====================================================================
+Domain                            FD      FI   FD_FI  TRIAGE   Total
+--------------------------------------------------------------------
+Boundary Scan / JTAG               2       1       1       1       5
+Signal Integrity                   2       2       1       1       6
+In-Circuit Test (ICT)              2       2       1       1       6
+Thermal Analysis                   1       1       1       1       4
+Mixed-Signal Test                  2       2       1       1       6
+Functional Test                    1       1       1       1       4
+Production Test                    2       2       0       1       5
+Environmental / Reliability        2       2       0       1       5
+--------------------------------------------------------------------
+TOTAL                             14      13       6       8      41
+====================================================================
+
+Category breakdown:
+  FD       (Fault Detection                 ):  14  (target: 14)
+  FI       (Fault Isolation                 ):  13  (target: 11)
+  FD_FI    (Fault Detection + Isolation     ):   6  (target: 8)
+  TRIAGE   (Triage (Misleading Data)        ):   8  (target: 13)
+
+  Grand total: 41 scenarios
+
+============================================================================
+SAMPLE SCENARIOS (3 of 41)
+============================================================================
+
+--- [1] FD-BS-001: Intermittent IDCODE bit flips ---
+  Category:          FD
+  Domain:            boundary_scan
+  Data type:         IDCODE register reads
+  Data description:  5 consecutive IDCODE reads from device 3 in a 5-device chain, hex values...
+  Nominal range:     Consistent 0x0BA00477 across all reads
+  Anomaly:           Bit 28 alternates between 0 and 1 across reads
+  Root cause:        Marginal signal integrity on TDO — insufficient setup time margin
+  Physics:           TDO setup time vs TCK falling edge, shift register jitter accumulation through c...
+
+--- [2] FI-SI-002: PDN resonance causing bit errors ---
+  Category:          FI
+  Domain:            signal_integrity
+  Data type:         PDN impedance sweep Z(f)
+  Data description:  Power distribution network impedance magnitude measured from 1 MHz to 1 GHz at IC pad...
+  Nominal range:     Z_PDN < 0.5 ohm from DC to 500 MHz (target impedance)
+  Anomaly:           Anti-resonance peak: impedance spikes to 2.0 ohm at 150 MHz
+  Root cause:        Missing decoupling capacitors — insufficient capacitor count in 100-200 MHz rang
+  Physics:           Parallel LC resonance of PCB plane capacitance + via inductance; anti-resonance ...
+
+--- [3] TRIAGE-XDOM-003: Mixed-signal ADC noise looks like degraded SNR ---
+  Category:          TRIAGE
+  Domain:            mixed_signal
+  Data type:         ADC output FFT
+  Data description:  4,096-point FFT of 12-bit ADC sampling a precision DC reference, captured on test fixture...
+  Nominal range:     SNR > 70 dB, no spurs above -80 dBFS
+  Anomaly:           Elevated noise floor at -85 dBFS (vs expected -95 dBFS), with discrete spurs at 
+  Root cause:        Ground loop between test fixture and DUT — AC mains coupling through ground impe
+  Physics:           Spurs at exact power-line harmonics (60/120/180/240 Hz) are diagnostic of AC mai...
+  Triage actual:     Ground loop injecting 60 Hz harmonics from AC mains; fixture grounding issue, no
+
+============================================================================
+VALIDATION
+============================================================================
+  Total scenarios:       41
+  Threshold (min 30):    PASS (41 >= 30)
+  Categories found:      ['FD', 'FD_FI', 'FI', 'TRIAGE'] (PASS)
+  Domains found:         8 of 8 (PASS)
+  TRIAGE actual_cause:   PASS
+  Required keys:         PASS
+
+  Per-category counts:   FD=14, FI=13, FD_FI=6, TRIAGE=8
+
+  OVERALL: PASS
+
+============================================================================
+SAMPLE DATA PRESENTATIONS (5 of 20 templates)
+============================================================================
+
+--- [1] IR Camera Thermal Grid (NOMINAL) ---
+IR thermal image, 6x6 grid (5 mm spacing), board under load:
+           0mm      5mm     10mm     15mm     20mm     25mm
+  0mm   50.1°   49.0°   49.5°   50.3°   48.1°   48.2°
+  5mm   48.5°   49.4°   49.6°   48.1°   50.2°   48.6°
+ 10mm   48.0°   48.5°   48.4°   48.2°   47.9°   49.8°
+ 15mm   50.5°   49.1°   49.5°   50.2°   48.6°   49.1°
+ 20mm   50.4°   49.6°   50.1°   49.9°   49.7°   50.0°
+ 25mm   48.7°   48.4°   50.1°   50.0°   48.9°   48.5°
+
+
+--- [2] ADC INL/DNL Measurements (ANOMALOUS) ---
+12-bit SAR ADC INL/DNL ramp test (4096 codes, 1048576 samples):
+  DNL: within ±0.4 LSB for most codes
+        spikes to +1.2 LSB at codes 2047 and 2048 (major carry transition)
+  INL: within ±0.8 LSB below code 1848 and above code 2248
+        peaks at +2.4 LSB at code 2048 (mid-scale)
+  Spec: INL < ±1.0 LSB, DNL < ±0.5 LSB
+
+
+--- [3] Eye Diagram Measurements (NOMINAL) ---
+Eye diagram measurements at 8.0 Gbps (differential receiver, 10,000 UI acquisition):
+  Eye height:    161.5 mV
+  Eye width:     48.3 ps
+  Random jitter: 4.19 ps RMS
+  Determ. jitter:10.1 ps
+  Total jitter:  68.8 ps (at BER = 1e-12)
+  Spec limits:   eye height > 120 mV, eye width > 45 ps, TJ < 35 ps
+
+
+--- [4] Icc Distribution (Supply Current) (ANOMALOUS) ---
+Icc (quiescent supply current) distribution for U12 across 500 boards:
+  Historical baseline: mean = 50 mA, sigma = 3.8 mA (from first 2,000 boards)
+  Current lot (last 500 boards): mean = 72.4 mA, sigma = 3.7 mA
+  Shift: +22.4 mA (45% above historical mean)
+  Sigma unchanged — distribution shifted, not broadened
+
+
+--- [5] Clock Period Jitter Histogram (NOMINAL) ---
+Period jitter measurement, 200 MHz clock (10000 consecutive periods):
+  Mean period: 5 ns
+  RMS jitter: 4.5 ps
+  Peak-to-peak: 29.2 ps
+  Distribution: Gaussian (no deterministic component visible)
+  Spec: period jitter < 11 ps RMS — PASS
+
+============================================================================
+Templates defined: 20
+All templates have generate() function: PASS
+============================================================================
