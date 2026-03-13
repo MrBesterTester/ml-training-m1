@@ -59,12 +59,12 @@
 
 ## Phase 3: LoRA Fine-Tuning
 
-- [ ] **[Claude Code]** 3.1 Configure & run LoRA training
-  - [ ] Create scripts/train.py (or document CLI command)
-  - [ ] Set training config: 600 iters, batch 2, 8 LoRA layers, lr 1e-5
-  - [ ] Run training
-  - [ ] Save training log to results/training_log.txt
-  - [ ] **TEST:** Training completes, loss decreases, adapters/hw-diagnostics/ exists
+- [x] **[Claude Code]** 3.1 Configure & run LoRA training *(REQ-020, completed 2026-03-12)*
+  - [x] Create scripts/train.py (or document CLI command)
+  - [x] Set training config: 600 iters, batch 2, 8 LoRA layers, lr 1e-5
+  - [x] Run training
+  - [x] Save training log to results/training_log.txt
+  - [x] **TEST:** Training completes, loss decreases, adapters/hw-diagnostics/ exists
 
 - [ ] **[Claude Code]** 3.2 Verify fine-tuned model inference
   - [ ] Run inference with adapter loaded

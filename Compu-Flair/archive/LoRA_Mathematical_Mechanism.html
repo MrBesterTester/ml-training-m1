@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Normal Modes and Layer Hierarchies: The Mathematical Mechanism of LoRA</title>
+<!-- KaTeX for math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ]
+  });"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;line-height:1.7;color:#2d2d2d;background:#f0f2f5;padding:20px}
+.container{max-width:960px;margin:0 auto;background:#fff;padding:40px 45px;box-shadow:0 2px 20px rgba(0,0,0,0.08);border-radius:10px}
+h1{color:#1a3a5c;border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:8px;font-size:2.1em;line-height:1.3}
+.subtitle{color:#555;font-size:1.05em;margin-bottom:25px}
+h2{color:#1a3a5c;margin:35px 0 18px;font-size:1.6em;border-left:5px solid #1a3a5c;padding-left:14px}
+h3{color:#2c5282;margin:22px 0 12px;font-size:1.2em}
+p{margin-bottom:14px;text-align:justify}
+ul,ol{margin:0 0 14px 28px}
+li{margin-bottom:8px}
+.abstract{background:#e8f0fe;padding:18px 22px;border-left:5px solid #1a3a5c;margin-bottom:28px;border-radius:4px;font-style:italic}
+.diagram{margin:25px 0;padding:18px;background:#fafbfc;border-radius:6px;text-align:center}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.caption{margin-top:8px;font-size:.9em;color:#666;font-style:italic;text-align:center}
+table{width:100%;border-collapse:collapse;margin:18px 0;font-size:.95em}
+th,td{border:1px solid #d0d7de;padding:10px 12px;text-align:left;vertical-align:top}
+th{background:#1a3a5c;color:#fff;font-weight:600}
+tr:nth-child(even){background:#f6f8fa}
+.note{background:#fff8e1;padding:14px 18px;border-left:4px solid #f9a825;margin:16px 0;border-radius:4px}
+.note strong{color:#e65100}
+.insight{background:#e8f5e9;padding:14px 18px;border-left:4px solid #2e7d32;margin:16px 0;border-radius:4px}
+.insight strong{color:#1b5e20}
+.punchline{background:#fce4ec;padding:16px 20px;border-left:5px solid #c62828;margin:20px 0;border-radius:4px;font-size:1.1em}
+.punchline strong{color:#b71c1c}
+.eq{background:#f5f5f5;padding:16px 20px;margin:16px 0;border-left:4px solid #1a3a5c;overflow-x:auto;text-align:center;font-size:1.15em}
+a{color:#1a3a5c}
+.footer{margin-top:40px;padding-top:18px;border-top:2px solid #e0e0e0;text-align:center;color:#888;font-size:.85em}
+.toc{background:#f5f7fa;padding:18px 24px;border-radius:6px;border:1px solid #e0e0e0;margin-bottom:28px}
+.toc h3{margin:0 0 10px;color:#1a3a5c;font-size:1.05em;border:none;padding:0}
+.toc ol{margin:0 0 0 20px;padding:0}
+.toc li{margin-bottom:4px;font-size:.95em}
+.toc a{color:#2c5282;text-decoration:none}
+.toc a:hover{text-decoration:underline;color:#1a3a5c}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:.8em;margin:2px;font-weight:600}
+.tag-layer{background:#e3f2fd;color:#1565c0}
+.tag-rank{background:#fce4ec;color:#c62828}
+.tag-both{background:#e8f5e9;color:#2e7d32}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Normal Modes &amp; Layer Hierarchies</h1>
+<p class="subtitle">The Mathematical Mechanism of LoRA &nbsp;|&nbsp; March 13, 2026</p>
+
+<div class="abstract">
+<strong>Context:</strong> This is a companion to
+<a href="../docs/COMPUFLAIR_LORA_INTERPRETATION.html"><em>Don't Melt It &mdash; Perturb It</em></a>,
+which interprets LoRA through the thermodynamic lens (annealing, equilibrium, perturbation theory).
+That document asks: <em>what is LoRA doing to the system as a whole?</em>
+This document asks a different question: <em>what is happening inside each adapted layer,
+and why are we adapting these layers and not others?</em> The answers come from
+normal mode analysis and the feature hierarchy of deep neural networks.
+</div>
+
+<nav class="toc">
+<h3>Table of Contents</h3>
+<ol>
+  <li><a href="#two-decompositions">The Two Decompositions</a></li>
+  <li><a href="#normal-modes">Within Each Layer: Normal Mode Analysis</a></li>
+  <li><a href="#hierarchy">Across Layers: The Feature Hierarchy</a></li>
+  <li><a href="#paradox">Resolving the Apparent Paradox</a></li>
+  <li><a href="#implications">Implications for This Project</a></li>
+</ol>
+</nav>
+
+<!-- ================================================================ -->
+<h2 id="two-decompositions">1. The Two Decompositions</h2>
+
+<p>LoRA involves two independent structural choices, and they answer different questions:</p>
+
+<table>
+  <tr>
+    <th style="width:22%">Choice</th>
+    <th style="width:25%">Question</th>
+    <th style="width:18%">Our Config</th>
+    <th style="width:35%">Physics Analogy</th>
+  </tr>
+  <tr>
+    <td><span class="tag tag-rank">Rank</span> $r = 8$</td>
+    <td>How many independent correction modes per layer?</td>
+    <td>8 modes</td>
+    <td>Normal mode truncation</td>
+  </tr>
+  <tr>
+    <td><span class="tag tag-layer">Layers</span> top 8 of 32</td>
+    <td>Where in the network to apply the correction?</td>
+    <td>Layers 25&ndash;32</td>
+    <td>Spatially localized perturbation</td>
+  </tr>
+</table>
+
+<p>These are <strong>orthogonal axes</strong> of the same system. Confusing them leads to a paradox that
+we'll resolve in <a href="#paradox">Section 4</a>. First, let's understand each axis on its own terms.</p>
+
+<!-- SVG: Two-axis overview -->
+<div class="diagram">
+<svg viewBox="0 0 780 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#1a3a5c"/></marker>
+    <marker id="arr-r" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#c62828"/></marker>
+    <marker id="arr-b" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#1565c0"/></marker>
+  </defs>
+
+  <!-- Background grid of layers x modes -->
+  <rect x="120" y="60" width="580" height="220" rx="4" fill="#fafbfc" stroke="#ddd"/>
+
+  <!-- Layer axis (horizontal) -->
+  <line x1="120" y1="280" x2="700" y2="280" stroke="#1565c0" stroke-width="2" marker-end="url(#arr-b)"/>
+  <text x="410" y="310" text-anchor="middle" font-size="13" font-weight="bold" fill="#1565c0">Layer axis (compositional: basic &rarr; abstract)</text>
+
+  <!-- Rank axis (vertical) -->
+  <line x1="120" y1="280" x2="120" y2="60" stroke="#c62828" stroke-width="2" marker-end="url(#arr-r)"/>
+  <text x="35" y="170" text-anchor="middle" font-size="13" font-weight="bold" fill="#c62828" transform="rotate(-90 35 170)">Rank axis (energy: dominant &rarr; least)</text>
+
+  <!-- Layer labels -->
+  <text x="175" y="52" text-anchor="middle" font-size="10" fill="#1565c0">Layer 1</text>
+  <text x="295" y="52" text-anchor="middle" font-size="10" fill="#1565c0">Layer 12</text>
+  <text x="415" y="52" text-anchor="middle" font-size="10" fill="#1565c0">Layer 24</text>
+  <text x="535" y="52" text-anchor="middle" font-size="10" fill="#999">Layer 25</text>
+  <text x="655" y="52" text-anchor="middle" font-size="10" fill="#999">Layer 32</text>
+
+  <!-- Frozen zone -->
+  <rect x="130" y="68" width="320" height="200" rx="4" fill="rgba(200,200,200,0.15)" stroke="#ccc" stroke-dasharray="6,4"/>
+  <text x="290" y="165" text-anchor="middle" font-size="16" fill="#bbb" font-weight="bold">FROZEN</text>
+  <text x="290" y="185" text-anchor="middle" font-size="11" fill="#bbb">no adapters attached</text>
+
+  <!-- Adapted zone -->
+  <rect x="470" y="68" width="220" height="200" rx="4" fill="rgba(46,125,50,0.08)" stroke="#2e7d32" stroke-width="2"/>
+
+  <!-- Mode rows in adapted zone -->
+  <rect x="478" y="76" width="204" height="20" rx="3" fill="rgba(46,125,50,0.25)"/>
+  <text x="580" y="91" text-anchor="middle" font-size="10" font-weight="bold" fill="#2e7d32">Mode 1 (largest &sigma;)</text>
+
+  <rect x="478" y="100" width="204" height="20" rx="3" fill="rgba(46,125,50,0.20)"/>
+  <text x="580" y="115" text-anchor="middle" font-size="10" fill="#2e7d32">Mode 2</text>
+
+  <rect x="478" y="124" width="204" height="20" rx="3" fill="rgba(46,125,50,0.16)"/>
+  <text x="580" y="139" text-anchor="middle" font-size="10" fill="#2e7d32">Mode 3</text>
+
+  <rect x="478" y="148" width="204" height="12" rx="3" fill="rgba(46,125,50,0.12)"/>
+  <rect x="478" y="164" width="204" height="12" rx="3" fill="rgba(46,125,50,0.09)"/>
+  <rect x="478" y="180" width="204" height="12" rx="3" fill="rgba(46,125,50,0.07)"/>
+  <rect x="478" y="196" width="204" height="12" rx="3" fill="rgba(46,125,50,0.05)"/>
+
+  <rect x="478" y="212" width="204" height="20" rx="3" fill="rgba(46,125,50,0.04)"/>
+  <text x="580" y="227" text-anchor="middle" font-size="10" fill="#999">Mode 8 (smallest &sigma;)</text>
+
+  <!-- Rank labels on left -->
+  <text x="107" y="88" text-anchor="end" font-size="10" fill="#c62828">r = 1</text>
+  <text x="107" y="225" text-anchor="end" font-size="10" fill="#c62828">r = 8</text>
+</svg>
+<div class="caption">Figure 1: LoRA's two orthogonal axes. The <span style="color:#1565c0;font-weight:bold">layer axis</span> (horizontal) selects <em>where</em> to perturb &mdash; only layers 25&ndash;32 are adapted. The <span style="color:#c62828;font-weight:bold">rank axis</span> (vertical) controls <em>how rich</em> the correction is within each adapted layer &mdash; 8 independent modes, ordered by singular value magnitude. The green region is where all 3.47M trainable parameters live.</div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="normal-modes">2. Within Each Layer: Normal Mode Analysis</h2>
+
+<h3>2.1 The SVD Connection</h3>
+
+<p>Any matrix $\mathbf{M}$ can be decomposed via the Singular Value Decomposition:</p>
+
+<div class="eq">
+$$\mathbf{M} = \mathbf{U\Sigma V}^\top = \sigma_1 \mathbf{u}_1\mathbf{v}_1^\top + \sigma_2 \mathbf{u}_2\mathbf{v}_2^\top + \sigma_3 \mathbf{u}_3\mathbf{v}_3^\top + \cdots$$
+</div>
+
+<p>where $\sigma_1 \geq \sigma_2 \geq \sigma_3 \geq \cdots$ are the <strong>singular values</strong>
+(the &ldquo;energies&rdquo; of each mode), and $\mathbf{u}_i, \mathbf{v}_i$ are the
+corresponding basis vectors (the &ldquo;mode shapes&rdquo;). Each term
+$\sigma_i \mathbf{u}_i\mathbf{v}_i^\top$ is an independent rank-1 component &mdash;
+a single mode of the matrix.</p>
+
+<p>This is structurally identical to a <strong>normal mode expansion</strong> of a vibrating system.
+In vibration analysis, any complex motion decomposes into independent modes, each with
+its own frequency (energy) and shape. The first few modes &mdash; the ones with the most
+energy &mdash; capture most of the system's behavior.</p>
+
+<h3>2.2 LoRA as Truncated SVD</h3>
+
+<p>The correction LoRA learns for each adapted weight matrix is:</p>
+
+<div class="eq">
+$$\Delta\mathbf{W} = \mathbf{B}\mathbf{A}$$
+</div>
+
+<p>where $\mathbf{B} \in \mathbb{R}^{d \times r}$ and $\mathbf{A} \in \mathbb{R}^{r \times d}$,
+with $r = 8$. This product $\mathbf{BA}$ is a matrix of rank at most $r$. Written in SVD form:</p>
+
+<div class="eq">
+$$\Delta\mathbf{W} = \mathbf{BA} \;\approx\; \sigma_1 \mathbf{u}_1\mathbf{v}_1^\top + \sigma_2 \mathbf{u}_2\mathbf{v}_2^\top + \cdots + \sigma_8 \mathbf{u}_8\mathbf{v}_8^\top$$
+</div>
+
+<p>LoRA doesn't compute an SVD explicitly &mdash; gradient descent finds the $\mathbf{B}$ and $\mathbf{A}$
+that minimize the training loss. But the result is equivalent: the learned correction is
+constrained to rank 8, which means it can express at most <strong>8 independent modes</strong>
+of adjustment to the original weight matrix.</p>
+
+<!-- SVG: SVD / Normal Mode decomposition -->
+<div class="diagram">
+<svg viewBox="0 0 780 260" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#555"/></marker>
+  </defs>
+
+  <!-- Original large matrix -->
+  <rect x="30" y="50" width="100" height="100" rx="4" fill="#e8f0fe" stroke="#1a3a5c" stroke-width="2"/>
+  <text x="80" y="105" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a3a5c">&Delta;W</text>
+  <text x="80" y="170" text-anchor="middle" font-size="10" fill="#555">d &times; d</text>
+  <text x="80" y="185" text-anchor="middle" font-size="10" fill="#555">full correction</text>
+
+  <!-- Equals sign -->
+  <text x="158" y="105" text-anchor="middle" font-size="20" fill="#555">=</text>
+
+  <!-- Mode 1 -->
+  <rect x="185" y="60" width="52" height="80" rx="3" fill="rgba(46,125,50,0.30)" stroke="#2e7d32"/>
+  <text x="211" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">&sigma;&#x2081;</text>
+  <text x="211" y="155" text-anchor="middle" font-size="9" fill="#2e7d32">largest</text>
+
+  <text x="250" y="105" text-anchor="middle" font-size="16" fill="#555">+</text>
+
+  <!-- Mode 2 -->
+  <rect x="265" y="65" width="46" height="70" rx="3" fill="rgba(46,125,50,0.22)" stroke="#2e7d32"/>
+  <text x="288" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">&sigma;&#x2082;</text>
+
+  <text x="324" y="105" text-anchor="middle" font-size="16" fill="#555">+</text>
+
+  <!-- Mode 3 -->
+  <rect x="339" y="70" width="40" height="60" rx="3" fill="rgba(46,125,50,0.16)" stroke="#2e7d32"/>
+  <text x="359" y="105" text-anchor="middle" font-size="11" fill="#2e7d32">&sigma;&#x2083;</text>
+
+  <text x="392" y="105" text-anchor="middle" font-size="14" fill="#555">+ &middot;&middot;&middot; +</text>
+
+  <!-- Mode 8 -->
+  <rect x="440" y="78" width="30" height="44" rx="3" fill="rgba(46,125,50,0.06)" stroke="#2e7d32"/>
+  <text x="455" y="105" text-anchor="middle" font-size="11" fill="#999">&sigma;&#x2088;</text>
+  <text x="455" y="155" text-anchor="middle" font-size="9" fill="#999">smallest</text>
+
+  <!-- Truncation line -->
+  <line x1="490" y1="50" x2="490" y2="150" stroke="#c62828" stroke-width="2" stroke-dasharray="6,4"/>
+
+  <!-- Discarded modes -->
+  <rect x="510" y="85" width="22" height="30" rx="3" fill="rgba(200,200,200,0.2)" stroke="#ccc"/>
+  <rect x="540" y="88" width="18" height="24" rx="3" fill="rgba(200,200,200,0.15)" stroke="#ccc"/>
+  <rect x="566" y="90" width="14" height="20" rx="3" fill="rgba(200,200,200,0.1)" stroke="#ccc"/>
+  <text x="590" y="105" text-anchor="start" font-size="11" fill="#ccc">&middot;&middot;&middot;</text>
+  <text x="550" y="155" text-anchor="middle" font-size="9" fill="#ccc">discarded (negligible energy)</text>
+
+  <!-- Labels -->
+  <text x="320" y="215" text-anchor="middle" font-size="11" fill="#2e7d32" font-weight="bold">&#x2190; kept: 8 modes (rank 8) &#x2192;</text>
+  <text x="555" y="215" text-anchor="middle" font-size="11" fill="#ccc">truncated</text>
+
+  <!-- Energy bar chart below -->
+  <text x="80" y="235" text-anchor="middle" font-size="10" fill="#555">Singular value spectrum:</text>
+  <rect x="190" y="238" width="48" height="14" rx="2" fill="#2e7d32"/>
+  <rect x="270" y="238" width="36" height="14" rx="2" fill="rgba(46,125,50,0.7)"/>
+  <rect x="340" y="238" width="26" height="14" rx="2" fill="rgba(46,125,50,0.5)"/>
+  <rect x="400" y="238" width="18" height="14" rx="2" fill="rgba(46,125,50,0.35)"/>
+  <rect x="445" y="238" width="12" height="14" rx="2" fill="rgba(46,125,50,0.2)"/>
+  <rect x="510" y="238" width="6" height="14" rx="2" fill="rgba(200,200,200,0.4)"/>
+  <rect x="540" y="238" width="4" height="14" rx="2" fill="rgba(200,200,200,0.3)"/>
+  <rect x="566" y="238" width="3" height="14" rx="2" fill="rgba(200,200,200,0.2)"/>
+</svg>
+<div class="caption">Figure 2: The correction matrix $\Delta\mathbf{W}$ decomposes into independent modes
+ordered by singular value (energy). LoRA keeps only the 8 dominant modes &mdash; the ones that carry
+the most correction energy. The remaining modes are below the noise floor and contribute negligibly.
+This is truncated SVD, structurally identical to keeping the fundamental modes of a vibrating system.</div>
+</div>
+
+<h3>2.3 What Each Mode Does</h3>
+
+<p>Think of matrix $\mathbf{A}$ as a <strong>measurement operator</strong> and matrix $\mathbf{B}$
+as a <strong>reconstruction operator</strong>:</p>
+
+<!-- SVG: A and B as encoder/decoder -->
+<div class="diagram">
+<svg viewBox="0 0 780 180" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#1a3a5c"/></marker>
+    <marker id="arr3g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2e7d32"/></marker>
+  </defs>
+
+  <!-- Input vector -->
+  <rect x="30" y="50" width="80" height="80" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+  <text x="70" y="85" text-anchor="middle" font-size="13" font-weight="bold" fill="#1565c0">x</text>
+  <text x="70" y="102" text-anchor="middle" font-size="10" fill="#1565c0">d-dim</text>
+  <text x="70" y="150" text-anchor="middle" font-size="10" fill="#555">layer input</text>
+
+  <!-- Arrow to A -->
+  <line x1="118" y1="90" x2="190" y2="90" stroke="#1a3a5c" stroke-width="2" marker-end="url(#arr3)"/>
+
+  <!-- A matrix (compression) -->
+  <rect x="200" y="60" width="100" height="60" rx="6" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+  <text x="250" y="88" text-anchor="middle" font-size="14" font-weight="bold" fill="#e65100">A</text>
+  <text x="250" y="105" text-anchor="middle" font-size="10" fill="#e65100">r &times; d</text>
+  <text x="250" y="150" text-anchor="middle" font-size="10" fill="#e65100">measure / compress</text>
+
+  <!-- Arrow to bottleneck -->
+  <line x1="308" y1="90" x2="365" y2="90" stroke="#1a3a5c" stroke-width="2" marker-end="url(#arr3)"/>
+
+  <!-- Bottleneck -->
+  <rect x="375" y="65" width="40" height="50" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="395" y="88" text-anchor="middle" font-size="11" font-weight="bold" fill="#2e7d32">8-d</text>
+  <text x="395" y="150" text-anchor="middle" font-size="10" fill="#2e7d32" font-weight="bold">bottleneck</text>
+  <text x="395" y="164" text-anchor="middle" font-size="9" fill="#2e7d32">&ldquo;fingerprint&rdquo;</text>
+
+  <!-- Arrow to B -->
+  <line x1="423" y1="90" x2="480" y2="90" stroke="#2e7d32" stroke-width="2" marker-end="url(#arr3g)"/>
+
+  <!-- B matrix (reconstruction) -->
+  <rect x="490" y="60" width="100" height="60" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="540" y="88" text-anchor="middle" font-size="14" font-weight="bold" fill="#2e7d32">B</text>
+  <text x="540" y="105" text-anchor="middle" font-size="10" fill="#2e7d32">d &times; r</text>
+  <text x="540" y="150" text-anchor="middle" font-size="10" fill="#2e7d32">reconstruct / project up</text>
+
+  <!-- Arrow to output -->
+  <line x1="598" y1="90" x2="660" y2="90" stroke="#2e7d32" stroke-width="2" marker-end="url(#arr3g)"/>
+
+  <!-- Output correction -->
+  <rect x="668" y="50" width="80" height="80" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="708" y="85" text-anchor="middle" font-size="12" font-weight="bold" fill="#2e7d32">BA(x)</text>
+  <text x="708" y="102" text-anchor="middle" font-size="10" fill="#2e7d32">d-dim</text>
+  <text x="708" y="150" text-anchor="middle" font-size="10" fill="#555">correction vector</text>
+</svg>
+<div class="caption">Figure 3: Inside each adapted layer, $\mathbf{A}$ compresses the $d$-dimensional input to an
+8-dimensional &ldquo;fingerprint&rdquo; (what matters for the domain correction), and $\mathbf{B}$ reconstructs
+a full-dimensional correction from it. The 8-d bottleneck is the information bottleneck &mdash;
+the same structure as a rank-8 filter bank with 8 parallel channels.</div>
+</div>
+
+<p>The 8-dimensional bottleneck forces the correction to live in a low-dimensional subspace.
+$\mathbf{A}$ learns to extract the 8 most relevant features of the input for the task of
+&ldquo;make this layer's output more hardware-diagnostics-appropriate.&rdquo;
+$\mathbf{B}$ learns to turn those 8 features into a correction vector in the full output space.</p>
+
+<h3>2.4 Why Rank 8 Is Enough</h3>
+
+<p>The claim implicit in choosing $r = 8$ is:</p>
+
+<div class="insight">
+<strong>The correction needed to each weight matrix lives in a low-dimensional subspace.</strong>
+The singular value spectrum of $\Delta\mathbf{W}$ decays rapidly. The first 8 singular values
+capture the vast majority of the correction's &ldquo;energy&rdquo; (Frobenius norm). The remaining
+modes contribute corrections so small they're below the noise floor of the training process.
+</div>
+
+<p>Empirically, our training run confirmed this: validation loss dropped 27.5% with just 8 modes
+per layer (3.47M parameters out of 3.2B). If the needed correction were high-rank &mdash; if many
+independent modes were required &mdash; rank 8 would not capture enough and the loss wouldn't budge.</p>
+
+<p>In normal mode terms: <strong>the &ldquo;distance&rdquo; between a general-purpose LLM and a hardware
+diagnostics specialist, measured within any single weight matrix, is well-approximated by
+8 basis vectors.</strong> Most of the correction's energy is concentrated in a handful of modes,
+just as most of a vibrating structure's energy is concentrated in its fundamental frequencies.</p>
+
+<!-- ================================================================ -->
+<h2 id="hierarchy">3. Across Layers: The Feature Hierarchy</h2>
+
+<h3>3.1 The CNN Precedent</h3>
+
+<p>The layer hierarchy in neural networks was first understood through convolutional networks
+for vision, which recapitulate the structure of biological visual processing discovered by
+Hubel and Wiesel in the 1960s:</p>
+
+<table>
+  <tr>
+    <th style="width:18%">Depth</th>
+    <th style="width:35%">CNN Features</th>
+    <th style="width:47%">Biological Vision (Hubel &amp; Wiesel)</th>
+  </tr>
+  <tr>
+    <td>Layers 1&ndash;2</td>
+    <td>Edges, oriented gradients</td>
+    <td>Simple cells in V1 &mdash; orientation-selective edge detectors</td>
+  </tr>
+  <tr>
+    <td>Layers 3&ndash;5</td>
+    <td>Textures, patterns, corners</td>
+    <td>Complex cells in V1/V2 &mdash; position-invariant pattern detectors</td>
+  </tr>
+  <tr>
+    <td>Layers 6&ndash;10</td>
+    <td>Object parts, component shapes</td>
+    <td>V4 / inferotemporal cortex &mdash; part-based representations</td>
+  </tr>
+  <tr>
+    <td>Final layers</td>
+    <td>Object identity, scene semantics</td>
+    <td>High-level recognition areas &mdash; category-selective neurons</td>
+  </tr>
+</table>
+
+<div class="note">
+<strong>The critical observation for transfer learning:</strong> early layers are universal;
+late layers are task-specific. A CNN trained on ImageNet to classify dogs learns edge detectors
+in layer 1 that are just as useful for classifying tumors in X-rays. But its final layers &mdash;
+the ones encoding &ldquo;this combination of features means golden retriever&rdquo; &mdash;
+are useless for radiology. This is why classical transfer learning in vision freezes
+the early layers and retrains the later ones.
+</div>
+
+<!-- SVG: CNN feature hierarchy -->
+<div class="diagram">
+<svg viewBox="0 0 780 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr4" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#666"/></marker>
+  </defs>
+
+  <!-- Layer boxes -->
+  <rect x="30" y="50" width="120" height="90" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+  <text x="90" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#1565c0">Early Layers</text>
+  <!-- Edge pattern -->
+  <line x1="55" y1="95" x2="85" y2="115" stroke="#1565c0" stroke-width="2"/>
+  <line x1="85" y1="95" x2="55" y2="115" stroke="#1565c0" stroke-width="2"/>
+  <line x1="100" y1="95" x2="100" y2="120" stroke="#1565c0" stroke-width="2"/>
+  <line x1="115" y1="100" x2="125" y2="110" stroke="#1565c0" stroke-width="2"/>
+  <text x="90" y="152" text-anchor="middle" font-size="10" fill="#1565c0">edges, gradients</text>
+  <text x="90" y="166" text-anchor="middle" font-size="10" font-weight="bold" fill="#1565c0">UNIVERSAL</text>
+
+  <line x1="158" y1="95" x2="195" y2="95" stroke="#666" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+  <rect x="205" y="50" width="120" height="90" rx="6" fill="#e8eaf6" stroke="#3949ab" stroke-width="2"/>
+  <text x="265" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#3949ab">Middle Layers</text>
+  <!-- Texture pattern -->
+  <rect x="235" y="92" width="25" height="25" rx="2" fill="none" stroke="#3949ab" stroke-width="1.5"/>
+  <rect x="268" y="92" width="25" height="25" rx="8" fill="none" stroke="#3949ab" stroke-width="1.5"/>
+  <text x="265" y="152" text-anchor="middle" font-size="10" fill="#3949ab">textures, parts</text>
+  <text x="265" y="166" text-anchor="middle" font-size="10" font-weight="bold" fill="#3949ab">COMPOSITIONAL</text>
+
+  <line x1="333" y1="95" x2="370" y2="95" stroke="#666" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+  <rect x="380" y="50" width="120" height="90" rx="6" fill="#fce4ec" stroke="#c62828" stroke-width="2"/>
+  <text x="440" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#c62828">Late Layers</text>
+  <!-- Abstract shape -->
+  <circle cx="420" cy="108" r="12" fill="none" stroke="#c62828" stroke-width="1.5"/>
+  <circle cx="420" cy="104" r="3" fill="#c62828"/>
+  <path d="M 414,114 Q 420,120 426,114" stroke="#c62828" stroke-width="1.5" fill="none"/>
+  <circle cx="460" cy="108" r="12" fill="none" stroke="#c62828" stroke-width="1.5"/>
+  <text x="460" y="113" text-anchor="middle" font-size="11" fill="#c62828">?</text>
+  <text x="440" y="152" text-anchor="middle" font-size="10" fill="#c62828">identity, meaning</text>
+  <text x="440" y="166" text-anchor="middle" font-size="10" font-weight="bold" fill="#c62828">TASK-SPECIFIC</text>
+
+  <!-- Bracket showing what gets adapted -->
+  <line x1="555" y1="40" x2="555" y2="155" stroke="#2e7d32" stroke-width="2"/>
+  <line x1="555" y1="40" x2="545" y2="40" stroke="#2e7d32" stroke-width="2"/>
+  <line x1="555" y1="155" x2="545" y2="155" stroke="#2e7d32" stroke-width="2"/>
+  <text x="575" y="90" font-size="11" font-weight="bold" fill="#2e7d32">Adapt</text>
+  <text x="575" y="106" font-size="11" font-weight="bold" fill="#2e7d32">here</text>
+
+  <!-- Bottom labels -->
+  <text x="90" y="190" text-anchor="middle" font-size="10" fill="#888">frozen in LoRA &amp;</text>
+  <text x="265" y="190" text-anchor="middle" font-size="10" fill="#888">frozen in LoRA &amp;</text>
+  <text x="440" y="190" text-anchor="middle" font-size="10" fill="#2e7d32">adapted: where domain</text>
+  <text x="90" y="202" text-anchor="middle" font-size="10" fill="#888">transfer learning</text>
+  <text x="265" y="202" text-anchor="middle" font-size="10" fill="#888">transfer learning</text>
+  <text x="440" y="202" text-anchor="middle" font-size="10" fill="#2e7d32">specialization lives</text>
+</svg>
+<div class="caption">Figure 4: The feature hierarchy in CNNs mirrors biological visual processing. Early layers learn
+universal features (edges, gradients); late layers learn task-specific abstractions (object identity).
+The same gradient &mdash; universal to specialized &mdash; appears in transformer LLMs, and it's why
+LoRA (like transfer learning) targets the later layers.</div>
+</div>
+
+<h3>3.2 The Same Hierarchy in Transformers</h3>
+
+<p>Transformer LLMs exhibit the same depth gradient, despite having a completely different architecture:</p>
+
+<table>
+  <tr>
+    <th style="width:22%">Depth</th>
+    <th style="width:40%">Transformer Function</th>
+    <th style="width:38%">Analogue</th>
+  </tr>
+  <tr>
+    <td>Layers 1&ndash;8</td>
+    <td>Token embeddings, basic syntax, local attention patterns</td>
+    <td>Edge detection &mdash; structural primitives</td>
+  </tr>
+  <tr>
+    <td>Layers 9&ndash;20</td>
+    <td>Grammar, coreference, entity tracking, semantic relationships</td>
+    <td>Texture/part recognition &mdash; compositional structure</td>
+  </tr>
+  <tr>
+    <td>Layers 21&ndash;28</td>
+    <td>Abstract reasoning, domain knowledge, stylistic voice</td>
+    <td>Object recognition &mdash; high-level meaning</td>
+  </tr>
+  <tr>
+    <td>Layers 29&ndash;32</td>
+    <td>Task-specific output shaping, response formatting</td>
+    <td>Classification head &mdash; final decision</td>
+  </tr>
+</table>
+
+<p>Research on transformer internals (probing classifiers, activation patching, causal tracing)
+consistently finds this pattern: syntactic information concentrates in early-to-middle layers,
+while semantic and task-specific information concentrates in late layers.</p>
+
+<h3>3.3 Why LoRA Adapts the Top Layers</h3>
+
+<p>Our configuration adapts layers 25&ndash;32 (the top 8 of 32). The reasoning maps directly
+to the feature hierarchy:</p>
+
+<div class="insight">
+<strong>The deep layers encode the equivalent of structural fundamentals for language</strong> &mdash;
+syntax, grammar, token relationships &mdash; the basic modes every language task requires.
+These are like the edge detectors in a CNN: universal, transferable, and already optimally learned
+during pre-training. Perturbing them risks destabilizing the entire system for negligible gain.
+</div>
+
+<p><strong>The top layers encode domain-specific abstractions</strong> &mdash; the high-level features
+that determine <em>what kind</em> of response the model produces. This is where &ldquo;general
+helpful assistant&rdquo; becomes &ldquo;hardware diagnostics specialist.&rdquo; The correction needed
+to shift domain behavior lives here, not in the syntactic machinery below.</p>
+
+<p>In hardware terms: you don't re-verify the entire board when you're updating application
+firmware. The lower levels (power distribution, clock trees, basic connectivity) are proven
+and stable. You test at the functional level &mdash; the top of the stack &mdash; where
+the change actually has effect.</p>
+
+<!-- ================================================================ -->
+<h2 id="paradox">4. Resolving the Apparent Paradox</h2>
+
+<p>Here is a question that seems paradoxical at first glance:</p>
+
+<div class="punchline">
+<strong>In harmonic analysis, the fundamental modes (lowest frequency, most energy) come
+&ldquo;first.&rdquo; In neural networks, the most basic features are also in the first layers.
+But we're adapting the LAST layers. And we said the rank-8 modes are like keeping the
+&ldquo;fundamental harmonics.&rdquo; So which end is fundamental?</strong>
+</div>
+
+<p>The resolution is that <strong>&ldquo;fundamental&rdquo; means different things on the two axes.</strong></p>
+
+<h3>4.1 Along the Layer Axis: Compositional Hierarchy</h3>
+
+<p>Layers are ordered by <strong>abstraction level</strong>, not by importance or energy.
+Layer 1 isn't the &ldquo;most important&rdquo; layer &mdash; it's the most basic. Each successive
+layer composes the representations of the previous one into higher-level abstractions:</p>
+
+<div class="eq">
+$$\text{tokens} \;\xrightarrow{\text{layers 1–8}}\; \text{syntax} \;\xrightarrow{\text{layers 9–20}}\; \text{semantics} \;\xrightarrow{\text{layers 21–32}}\; \text{domain behavior}$$
+</div>
+
+<p>You don't adapt the atoms when you want the organism to specialize. The atoms are fine.
+You adapt the high-level organizational principles &mdash; the later, more abstract layers.
+The first layers are &ldquo;fundamental&rdquo; in the sense of being <em>foundational</em>
+(everything else builds on them), but they are not where domain specialization happens.</p>
+
+<h3>4.2 Along the Rank Axis: Energy Hierarchy</h3>
+
+<p>Within each adapted layer, the 8 modes are ordered by <strong>correction energy</strong>
+(singular value magnitude). Mode 1 carries the most correction energy &mdash; it's the dominant
+direction the weight matrix needs to shift. Mode 8 carries the least. This is the classical
+harmonic ordering: fundamental first, overtones after.</p>
+
+<div class="eq">
+$$\sigma_1 \;\geq\; \sigma_2 \;\geq\; \sigma_3 \;\geq\; \cdots \;\geq\; \sigma_8 \;\gg\; \sigma_9 \;\approx\; 0$$
+</div>
+
+<h3>4.3 The Two Axes Are Orthogonal</h3>
+
+<!-- SVG: The paradox resolution -->
+<div class="diagram">
+<svg viewBox="0 0 780 340" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr5b" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#1565c0"/></marker>
+    <marker id="arr5r" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#c62828"/></marker>
+  </defs>
+
+  <!-- Axes -->
+  <line x1="130" y1="270" x2="720" y2="270" stroke="#1565c0" stroke-width="2.5" marker-end="url(#arr5b)"/>
+  <line x1="130" y1="270" x2="130" y2="40" stroke="#c62828" stroke-width="2.5" marker-end="url(#arr5r)"/>
+
+  <!-- Axis labels -->
+  <text x="425" y="310" text-anchor="middle" font-size="14" font-weight="bold" fill="#1565c0">Layer axis: basic &rarr; abstract</text>
+  <text x="425" y="330" text-anchor="middle" font-size="11" fill="#1565c0">(compositional hierarchy &mdash; &ldquo;fundamental&rdquo; = foundational)</text>
+
+  <text x="55" y="155" text-anchor="middle" font-size="14" font-weight="bold" fill="#c62828" transform="rotate(-90 55 155)">Rank axis: dominant &rarr; least</text>
+  <text x="88" y="155" text-anchor="middle" font-size="11" fill="#c62828" transform="rotate(-90 88 155)">(energy hierarchy &mdash; &ldquo;fundamental&rdquo; = most energy)</text>
+
+  <!-- Layer labels -->
+  <text x="200" y="286" text-anchor="middle" font-size="10" fill="#1565c0">Layer 1</text>
+  <text x="325" y="286" text-anchor="middle" font-size="10" fill="#1565c0">Layer 12</text>
+  <text x="450" y="286" text-anchor="middle" font-size="10" fill="#1565c0">Layer 24</text>
+  <text x="575" y="286" text-anchor="middle" font-size="10" fill="#2e7d32" font-weight="bold">Layer 25</text>
+  <text x="690" y="286" text-anchor="middle" font-size="10" fill="#2e7d32" font-weight="bold">Layer 32</text>
+
+  <!-- Rank labels -->
+  <text x="118" y="255" text-anchor="end" font-size="10" fill="#c62828">mode 1</text>
+  <text x="118" y="160" text-anchor="end" font-size="10" fill="#c62828">mode 4</text>
+  <text x="118" y="65" text-anchor="end" font-size="10" fill="#c62828">mode 8</text>
+
+  <!-- Frozen zone -->
+  <rect x="145" y="52" width="340" height="210" rx="6" fill="rgba(200,200,200,0.08)" stroke="#ddd" stroke-dasharray="6,4"/>
+  <text x="315" y="155" text-anchor="middle" font-size="22" fill="#ddd" font-weight="bold">FROZEN</text>
+  <text x="315" y="180" text-anchor="middle" font-size="12" fill="#ccc">W&#x2080; untouched</text>
+
+  <!-- Adapted zone with gradient -->
+  <rect x="505" y="52" width="200" height="210" rx="6" fill="rgba(46,125,50,0.04)" stroke="#2e7d32" stroke-width="2"/>
+
+  <!-- Mode bars in adapted zone (showing energy gradient) -->
+  <rect x="515" y="56" width="180" height="22" rx="3" fill="rgba(46,125,50,0.35)"/>
+  <text x="605" y="72" text-anchor="middle" font-size="10" font-weight="bold" fill="#fff">&sigma;&#x2081; &mdash; most correction energy</text>
+
+  <rect x="515" y="82" width="180" height="18" rx="3" fill="rgba(46,125,50,0.25)"/>
+  <text x="605" y="95" text-anchor="middle" font-size="9" fill="#2e7d32">&sigma;&#x2082;</text>
+
+  <rect x="515" y="104" width="180" height="16" rx="3" fill="rgba(46,125,50,0.18)"/>
+  <rect x="515" y="124" width="180" height="14" rx="3" fill="rgba(46,125,50,0.14)"/>
+  <rect x="515" y="142" width="180" height="12" rx="3" fill="rgba(46,125,50,0.10)"/>
+  <rect x="515" y="158" width="180" height="12" rx="3" fill="rgba(46,125,50,0.07)"/>
+  <rect x="515" y="174" width="180" height="10" rx="3" fill="rgba(46,125,50,0.05)"/>
+
+  <rect x="515" y="188" width="180" height="18" rx="3" fill="rgba(46,125,50,0.03)"/>
+  <text x="605" y="201" text-anchor="middle" font-size="9" fill="#999">&sigma;&#x2088; &mdash; least energy</text>
+
+  <!-- Corner annotations -->
+  <text x="155" y="262" font-size="10" fill="#888">basic features,</text>
+  <text x="155" y="275" font-size="10" fill="#888">no correction needed</text>
+
+  <text x="515" y="245" font-size="10" font-weight="bold" fill="#2e7d32">domain abstractions,</text>
+  <text x="515" y="258" font-size="10" font-weight="bold" fill="#2e7d32">low-rank correction applied</text>
+</svg>
+<div class="caption">Figure 5: The resolution of the paradox. The layer axis (horizontal) is a <em>compositional</em>
+hierarchy &mdash; basic to abstract. The rank axis (vertical) is an <em>energy</em> hierarchy &mdash; dominant
+modes to least. They are orthogonal. &ldquo;Fundamental&rdquo; means &ldquo;foundational&rdquo; on
+the layer axis but &ldquo;most energetic&rdquo; on the rank axis. The green region &mdash; high-abstraction
+layers, energy-ordered modes &mdash; is where all of LoRA's 3.47M parameters live.</div>
+</div>
+
+<p>The rank-8 modes are &ldquo;fundamental&rdquo; in the <em>energy</em> sense &mdash; they capture the
+most correction energy &mdash; but they operate within the layers that sit at the
+<em>abstract end</em> of the compositional hierarchy. There is no contradiction: one axis
+answers <strong>which layers need correcting</strong> (the abstract ones); the other answers
+<strong>how efficiently you can represent that correction</strong> (8 modes suffice).</p>
+
+<!-- ================================================================ -->
+<h2 id="implications">5. Implications for This Project</h2>
+
+<h3>5.1 What the Training Run Confirmed</h3>
+
+<p>Our results (val loss $2.809 \to 2.037$ with rank 8, top 8 layers) confirm two empirical claims:</p>
+
+<ol>
+  <li><strong>The hardware diagnostics correction is low-rank.</strong> Eight modes per layer captured
+  enough of the needed adjustment to reduce validation loss by 27.5%. The correction's singular
+  value spectrum decays fast enough that modes $9+$ contribute negligibly.</li>
+
+  <li><strong>The correction is concentrated in the upper layers.</strong> Adapting 8 of 32 layers
+  (25%) was sufficient. The lower 24 layers &mdash; the syntactic and basic semantic machinery &mdash;
+  didn't need to change for the model to learn hardware diagnostics.</li>
+</ol>
+
+<h3>5.2 Future Tuning Strategies</h3>
+
+<p>The two axes suggest independent strategies for pushing further:</p>
+
+<table>
+  <tr>
+    <th style="width:25%">Strategy</th>
+    <th style="width:40%">What It Does</th>
+    <th style="width:35%">When to Try It</th>
+  </tr>
+  <tr>
+    <td>Increase rank<br>(e.g., $r = 16$ or $32$)</td>
+    <td>More modes per adapted layer &mdash; captures finer structure in $\Delta\mathbf{W}$</td>
+    <td>If the model gets the general domain right but lacks nuance or precision</td>
+  </tr>
+  <tr>
+    <td>Adapt more layers<br>(e.g., 16 of 32)</td>
+    <td>Push the perturbation deeper into semantic layers</td>
+    <td>If the model needs to change how it <em>reasons</em> about the domain, not just what it says</td>
+  </tr>
+  <tr>
+    <td>More training data</td>
+    <td>More signal for the existing rank and layers to extract</td>
+    <td>When diminishing returns suggest the current parameters have extracted all available signal</td>
+  </tr>
+</table>
+
+<p>The 600-iteration loss curve showed clear diminishing returns after iteration 200
+(85% of improvement already captured). This suggests the current rank and layer count have
+extracted most of the available signal from 385 training examples. <strong>More data &mdash;
+not more parameters &mdash; is likely the next leverage point.</strong></p>
+
+<div class="footer">
+  Companion to <a href="../docs/COMPUFLAIR_LORA_INTERPRETATION.html"><em>Don't Melt It &mdash; Perturb It</em></a>
+  &nbsp;|&nbsp; Hardware Diagnostics LLM Fine-Tuning &nbsp;|&nbsp; Sam Kirk (with Claude Code) &nbsp;|&nbsp; March 2026
+</div>
+
+</div><!-- .container -->
+</body>
+</html>

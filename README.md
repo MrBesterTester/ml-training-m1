@@ -71,7 +71,8 @@ ml_training_m1/
 │   ├── COMPUFLAIR_LORA_INTERPRETATION.html ← physics interpretation of LoRA (KaTeX + SVG)
 │   └── COMPUFLAIR_LORA_INTERPRETATION.md  ← same content, plain markdown
 ├── Compu-Flair/
-│   ├── Compu-Flair.html                  ← CompuFlair-inspired portfolio plan (physics-ML pedagogy)
+│   ├── Physics_of_LoRA.html              ← unified physics interpretation (thermodynamics + normal modes)
+│   ├── Original_Proposal_CompuFlair.html ← original portfolio plan (physics-ML pedagogy)
 │   └── Alternative_Proposal_LLM_FineTuning_Project.md ← pivot from CompuFlair curriculum to this project
 ├── scripts/
 │   ├── generate_dataset.py ← topic taxonomy, physics mappings, dataset generation
@@ -104,7 +105,7 @@ This project's physics-first approach draws on three bodies of work comparing ph
 
 | Source | Location | What It Contains |
 |---|---|---|
-| **CompuFlair (Ardavan Borzou)** | `Compu-Flair/Compu-Flair.html` | Portfolio plan inspired by Borzou's "P = e^(-F)/Z" framework — the idea that all of ML can be interpreted through the Gibbs-Boltzmann equation. Physics-first pedagogy for ML practitioners. |
+| **CompuFlair (Ardavan Borzou)** | `Compu-Flair/Original_Proposal_CompuFlair.html` | Portfolio plan inspired by Borzou's "P = e^(-F)/Z" framework — the idea that all of ML can be interpreted through the Gibbs-Boltzmann equation. Physics-first pedagogy for ML practitioners. |
 | **Alternative Proposal** | `Compu-Flair/Alternative_Proposal_LLM_FineTuning_Project.md` | The pivot document: why LoRA fine-tuning on Sam's hardware diagnostics expertise is a stronger portfolio piece than the original CompuFlair curriculum path. This is the project's origin story. |
 | **Vanchurin / CompuFlair / Brunton Comparison** | `../Physics ML - Vanchurin-Comput-flare/` (6 HTML documents) | Deep comparison of three approaches to physics-ML intersection: Vanchurin (learning dynamics *are* physics), Borzou/CompuFlair (physics as interpretive lens for ML), Brunton (embed physics into ML architectures). Includes the "Three Roles of the Hamiltonian" analysis. |
 
