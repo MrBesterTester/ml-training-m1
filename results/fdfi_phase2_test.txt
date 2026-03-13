@@ -1,0 +1,35 @@
+File: data/fdfi_fd_entries.jsonl
+Category: FD (Fault Detection)
+Entry count: 40 (target: 30-50)
+Count check: PASS
+JSON validity: 40/40 valid (PASS)
+Numerical data in instruction: 28/40 (70%)
+Output word count: min=229, max=322, avg=285
+
+File: data/fdfi_fi_entries.jsonl
+Category: FI (Fault Isolation)
+Entry count: 40 (target: 30-50)
+Count check: PASS
+JSON validity: 40/40 valid (PASS)
+Numerical data in instruction: 36/40 (90%)
+Output word count: min=370, max=650, avg=510
+
+File: data/fdfi_combined_entries.jsonl
+Category: FD+FI (Combined)
+Entry count: 28 (target: 20-30)
+Count check: PASS
+JSON validity: 28/28 valid (PASS)
+Numerical data in instruction: 21/28 (75%)
+Output word count: min=361, max=509, avg=431
+
+File: data/fdfi_triage_entries.jsonl
+Category: TRIAGE (Honest Triage)
+Entry count: 25 (target: 20-30)
+Count check: PASS
+JSON validity: 25/25 valid (PASS)
+Numerical data in instruction: 23/25 (92%)
+Output word count: min=318, max=417, avg=369
+
+============================================================
+Total entries: 133
+Overall: PASS

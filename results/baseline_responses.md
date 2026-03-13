@@ -23,6 +23,18 @@
 
 **Average generation speed:** ~26 tok/s
 
+### Key Finding: Base Model Fails at Numerical Diagnostics
+
+The base model handles conceptual Q&A adequately (generic but coherent), but **struggles badly with numerical diagnostic data**. Across all 5 FD/FI prompts, the base model:
+
+- **Hallucinated data** — invented an S11 reflection table that wasn't in the prompt (TDR)
+- **Miscounted and miscalculated** — reported 8/10 runs passed when failures appeared in 5/10; computed wrong failure rates (Boundary Scan)
+- **Repeated itself** — verbatim paragraph duplication instead of analysis; fabricated "fan speed" data not present in the input (Thermal)
+- **Missed the critical diagnosis entirely** — reformatted data into meaningless percentages instead of identifying the stuck-bit / missing code pattern at mid-scale (ADC)
+- **Produced zero analysis** — repeated "ICs functioned normally" for every passing voltage step instead of flagging the 5-step fail region below spec (Voltage Margining)
+
+This establishes a clear contrast target for fine-tuning: the model needs to learn to *read* numerical tables, identify anomalies, and ground its analysis in physics — not just restate or hallucinate data.
+
 ---
 
 ## Conceptual Q&A

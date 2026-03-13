@@ -244,7 +244,7 @@ Test: The fine-tuned model generates responses. Responses should show more speci
 
 Build a script that runs the same prompts through both models and generates a comparison document.
 
-**Context:** This is the portfolio centerpiece — the side-by-side comparison that proves the fine-tuning worked. We want 10-15 diverse prompts from the eval set, with both base and fine-tuned responses captured.
+**Context:** This is the portfolio centerpiece — the side-by-side comparison that proves the fine-tuning worked. The evaluation **must** reuse the 9 baseline prompts from `results/baseline_responses.json` (4 conceptual Q&A + 5 FD/FI numerical diagnostics) so the before/after comparison is direct and fair. The base model responses are already captured — the evaluate script only needs to run the fine-tuned model on the same prompts and place the results side-by-side. Additional eval-set prompts can be added on top, but the 9 baselines are the core comparison set.
 
 ```
 Create scripts/evaluate.py that generates side-by-side comparisons.

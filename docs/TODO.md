@@ -78,10 +78,11 @@
 
 - [ ] **[Claude Code]** 4.1 Create evaluation script & generate comparisons
   - [ ] Create scripts/evaluate.py
-  - [ ] Select 10-15 diverse prompts from eval set
-  - [ ] Run both base and fine-tuned model on each
-  - [ ] Write results/comparison.md with side-by-side output
-  - [ ] **TEST:** results/comparison.md has 10-15 formatted comparison entries
+  - [ ] Reuse the 9 baseline prompts from results/baseline_responses.json (4 conceptual Q&A + 5 FD/FI numerical) as core comparison set
+  - [ ] Optionally add more prompts from eval set to reach 10-15 total
+  - [ ] Run fine-tuned model on each prompt; base model responses already captured in baselines
+  - [ ] Write results/comparison.md with side-by-side output (base vs fine-tuned)
+  - [ ] **TEST:** results/comparison.md has 10-15 formatted comparison entries covering both conceptual and numerical prompts
 
 - [ ] **[Claude Code]** 4.2 Write README
   - [ ] Project description and motivation
