@@ -1,7 +1,7 @@
 {
   "model": "models/llama-3.2-3b-4bit",
   "max_tokens": 200,
-  "timestamp": "2026-03-09T21:23:47-0700",
+  "timestamp": "2026-03-12T21:33:09.119498-07:00",
   "results": [
     {
       "prompt": "What is boundary scan testing and when would you use it?",
@@ -10,7 +10,9 @@
       "generation_tokens": 200,
       "prompt_tps": 10.44,
       "generation_tps": 29.01,
-      "peak_memory_gb": 1.861
+      "peak_memory_gb": 1.861,
+      "category": "Conceptual Q&A",
+      "label": "Boundary Scan Testing"
     },
     {
       "prompt": "A laptop powers on but the screen stays black. Walk me through a systematic hardware diagnostic process.",
@@ -19,7 +21,9 @@
       "generation_tokens": 200,
       "prompt_tps": 130.94,
       "generation_tps": 29.27,
-      "peak_memory_gb": 1.876
+      "peak_memory_gb": 1.876,
+      "category": "Conceptual Q&A",
+      "label": "Black Screen Diagnostic"
     },
     {
       "prompt": "Explain the difference between ECC and non-ECC memory, and how memory errors are detected.",
@@ -28,7 +32,9 @@
       "generation_tokens": 200,
       "prompt_tps": 130.12,
       "generation_tps": 28.87,
-      "peak_memory_gb": 1.876
+      "peak_memory_gb": 1.876,
+      "category": "Conceptual Q&A",
+      "label": "ECC vs Non-ECC Memory"
     },
     {
       "prompt": "What are common causes of intermittent PCIe bus errors and how would you diagnose them?",
@@ -37,7 +43,59 @@
       "generation_tokens": 200,
       "prompt_tps": 69.52,
       "generation_tps": 29.11,
-      "peak_memory_gb": 1.876
+      "peak_memory_gb": 1.876,
+      "category": "Conceptual Q&A",
+      "label": "PCIe Bus Errors"
+    },
+    {
+      "response": "\n\nTDR reflection coefficient sweep (target Z0 = 50 ohm):\n  Distance (mm)    S11 (dB)\n             0      -0.3\n             4      -0.5\n             8      -0.2\n            12      -0.6\n            16      -0.1\n            20      -0.4\n            24      -0.3\n            28      -0.5\n            32      -0.2\n            36      -0.6\n            40      -0.1\n            44      -0.4\n            48      -0.3\n            52      -0.5\n            56      -0.2\n            60      -0.6\n            64      -0.1\n            68      -0.4\n            72      -0.3\n            ",
+      "prompt_tokens": 285,
+      "generation_tokens": 200,
+      "generation_tps": 24.14,
+      "peak_memory_gb": 2.084,
+      "category": "Numerical Diagnostics (FD/FI)",
+      "label": "TDR Impedance Measurements",
+      "prompt": "Here are the TDR measurements from today's production run on a 90 mm differential pair routed on layers 3-4 of our 8-layer stack-up. Target impedance is 50 ohm. Please review.\n\nTDR impedance sweep (target Z0 = 50 ohm):\n  Distance (mm)    Z (ohm)\n             0      50.3\n             4      49.8\n             8      50.1\n            12      49.6\n            16      50.4\n            20      50.2\n            24      49.7\n            28      50.5\n            32      50.1\n            36      49.9\n            40      50.3\n            44      41.2\n            48      38.5\n            52      42.8\n            56      50.1\n            60      49.7\n            64      50.4\n            68      50.0\n            72      49.8\n            76      50.2\n            80      50.5\n            84      49.9\n            88      50.1\n            90      50.3"
+    },
+    {
+      "response": "(FAIL)\n\nThe test results show that 8 out of 10 runs passed, with 2 failures. The failures occurred in Runs 2 and 10, with a total of 4 failed nets. The failures are due to the failure of NET_147, NET_148, and NET_149.\n\nThe test results indicate that the board revision has a 20% failure rate for the three nets that failed. The failure rate is calculated by dividing the number of failures by the total number of runs.\n\nThe test results also show that the failure rate is not uniform across the board. The failure rate for NET_147 is 40% (3 failures out of 7 runs), while the failure rate for NET_148 is 20% (2 failures out of 10 runs). The failure rate for NET_149 is 100% (3 failures out of 3 runs).\n\nThe test results indicate that the board revision has a 20% failure rate for the three nets that",
+      "prompt_tokens": 302,
+      "generation_tokens": 201,
+      "generation_tps": 24.58,
+      "peak_memory_gb": 2.122,
+      "category": "Numerical Diagnostics (FD/FI)",
+      "label": "Boundary Scan Interconnect Results",
+      "prompt": "We just completed the boundary scan interconnect test suite on a new board revision. Here are the results from 10 consecutive runs across 200 nets. Can you take a look at the data?\n\nBoundary Scan Interconnect Test \u2014 10 runs, 200 nets:\n  Run  1: 200/200 PASS\n  Run  2: 197/200 PASS (FAIL: NET_147, NET_148, NET_149)\n  Run  3: 200/200 PASS\n  Run  4: 198/200 PASS (FAIL: NET_147, NET_148)\n  Run  5: 200/200 PASS\n  Run  6: 197/200 PASS (FAIL: NET_147, NET_148, NET_149)\n  Run  7: 200/200 PASS\n  Run  8: 199/200 PASS (FAIL: NET_148)\n  Run  9: 200/200 PASS\n  Run 10: 198/200 PASS (FAIL: NET_147, NET_149)\n\nNet mapping:\n  NET_147: U3.B7 (FPGA) \u2192 U8.pin14 (DDR addr A12)\n  NET_148: U3.B8 (FPGA) \u2192 U8.pin15 (DDR addr A13)\n  NET_149: U3.B9 (FPGA) \u2192 U8.pin16 (DDR addr A14)"
+    },
+    {
+      "response": "\nFan speed:  1000 rpm\n\nThe system is operating within the expected temperature range. The highest temperature is 66.1 C at the far outlet. The lowest temperature is 52.3 C at the inlet. The average temperature is 61.1 C. The temperature difference between the inlet and outlet is 12.8 C. The temperature difference between the mid points and the outlet is 12.5 C.\n\nThe system is operating within the expected temperature range. The highest temperature is 66.1 C at the far outlet. The lowest temperature is 52.3 C at the inlet. The average temperature is 61.1 C. The temperature difference between the inlet and outlet is 12.8 C. The temperature difference between the mid points and the outlet is 12.5 C.\n\nThe system is operating within the expected temperature range. The highest temperature is 66.1 C at the far outlet. The lowest temperature is 52.3",
+      "prompt_tokens": 153,
+      "generation_tokens": 201,
+      "generation_tps": 26.61,
+      "peak_memory_gb": 1.966,
+      "category": "Numerical Diagnostics (FD/FI)",
+      "label": "Thermal Survey",
+      "prompt": "Routine thermal survey on the new power supply module. Six thermocouples placed across the board in the forced-air cooling zone. System has been at steady-state for 20 minutes under nominal load. Here are the readings.\n\n  TC1 (inlet side):   52.3 C\n  TC2 (mid-left):     53.1 C\n  TC3 (mid-right):    52.8 C\n  TC4 (outlet side):  64.7 C\n  TC5 (center-rear):  65.2 C\n  TC6 (far outlet):   66.1 C\n\nAmbient: 24.5 C\nAirflow: 2.0 m/s nominal at inlet"
+    },
+    {
+      "response": "\n\n  Code density histogram:\n  0000-0500:  0.25% (241/961,256)\n  0501-1000:  0.25% (238/961,256)\n  1001-1500:  0.26% (240/961,256)\n  1501-2000:  0.26% (237/961,256)\n  2001-2046:  0.27% (242/961,256)\n  2047-2048:  0.00% (0/961,256)\n  2049-2050:  0.00% (0/961,256)\n  2051-2500:  0.27% (239/961,256)\n  2501-3000:  0.26% (241/961,256)\n  3001-",
+      "prompt_tokens": 328,
+      "generation_tokens": 201,
+      "generation_tps": 24.12,
+      "peak_memory_gb": 2.131,
+      "category": "Numerical Diagnostics (FD/FI)",
+      "label": "ADC Code Density Histogram",
+      "prompt": "Can you look over this code density histogram from the ADC characterization we ran this morning? Standard ramp test, 12-bit SAR ADC, 1 million samples.\n\n12-bit SAR ADC Code Density Test (1,048,576 samples, linear ramp input):\n  Expected count per code: ~256 (uniform distribution)\n\n  Code range     Avg count    Min count    Max count\n  0000-0500        257          241          272\n  0501-1000        255          238          270\n  1001-1500        258          240          275\n  1501-2000        254          237          271\n  2001-2046        256          242          269\n  2047              0            0            0\n  2048              0            0            0\n  2049              0            0            0\n  2050            518          518          518\n  2051-2500       257          239          273\n  2501-3000       255          241          268\n  3001-3500       258          243          272\n  3501-4095       256          240          269\n\n  Total missing codes: 3 (codes 2047, 2048, 2049)\n  Code 2046: count = 512\n  Code 2050: count = 518"
+    },
+    {
+      "response": "with no functional failures.\n\n  Note: The 2.97V test failed because the board's voltage regulator was unable to provide enough voltage to the ICs. The 3.63V test passed because the voltage regulator was able to provide enough voltage to the ICs.\n\n  The 3.14V test passed because the ICs were able to function normally at this voltage level.\n\n  The 3.17V test passed because the ICs were able to function normally at this voltage level.\n\n  The 3.20V test passed because the ICs were able to function normally at this voltage level.\n\n  The 3.23V test passed because the ICs were able to function normally at this voltage level.\n\n  The 3.27V test passed because the ICs were able to function normally at this voltage level.\n\n  The 3.30V test passed because the ICs were able to function normally at this voltage level.\n\n  The 3.33",
+      "prompt_tokens": 258,
+      "generation_tokens": 201,
+      "generation_tps": 22.69,
+      "peak_memory_gb": 2.065,
+      "category": "Numerical Diagnostics (FD/FI)",
+      "label": "Voltage Margining Sweep",
+      "prompt": "We ran our standard voltage margining sweep on the new board revision. Here are the functional test results at each voltage step. Nominal VCC is 3.3V. Your review is appreciated.\n\nVoltage margining test (nominal 3.3V, +/-10% range):\n  Voltage (V)    Result\n        2.97     FAIL\n        3.00     FAIL\n        3.03     FAIL\n        3.07     FAIL\n        3.10     FAIL\n        3.14     PASS\n        3.17     PASS\n        3.20     PASS\n        3.23     PASS\n        3.27     PASS\n        3.30     PASS\n        3.33     PASS\n        3.37     PASS\n        3.40     PASS\n        3.43     PASS\n        3.47     PASS\n        3.50     PASS\n        3.53     PASS\n        3.57     PASS\n        3.60     PASS\n        3.63     PASS\n\n  Spec: must pass across +/-10% range (2.97V to 3.63V)"
     }
   ]
 }

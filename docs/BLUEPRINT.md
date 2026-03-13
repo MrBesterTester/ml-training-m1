@@ -179,6 +179,8 @@ Set up the training configuration and run the fine-tuning.
 
 **Context:** LoRA freezes the base model and trains small rank-8 adapter matrices on the attention layers. With ~200-500 examples and batch size 2, training should take 30-90 minutes on the M1. We use mlx_lm's built-in LoRA support.
 
+**Why Python, not Swift:** `mlx-lm` provides LoRA fine-tuning out of the box via a single CLI command. `mlx-swift` and `mlx-swift-examples` cover inference only — there is no Swift equivalent of `mlx_lm.lora`. Writing a LoRA training loop from scratch in Swift (attention layer hooking, gradient accumulation, adapter serialization) would be substantial effort for zero benefit, since both languages call the same Metal shaders on the M1 GPU — the actual compute is identical. Swift would make sense for a native macOS inference app (Phase 6), but not for training.
+
 ```
 Create a training script and run LoRA fine-tuning.
 
