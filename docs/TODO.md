@@ -66,11 +66,11 @@
   - [x] Save training log to results/training_log.txt
   - [x] **TEST:** Training completes, loss decreases, adapters/hw-diagnostics/ exists
 
-- [ ] **[Claude Code]** 3.2 Verify fine-tuned model inference
-  - [ ] Run inference with adapter loaded
-  - [ ] Compare response to Step 1.3 baseline
-  - [ ] Try 2-3 additional prompts
-  - [ ] **TEST:** Fine-tuned responses show more domain-specific detail
+- [x] **[Claude Code]** 3.2 Verify fine-tuned model inference *(REQ-021, completed 2026-03-13)*
+  - [x] Run inference with adapter loaded
+  - [x] Compare response to Step 1.3 baseline
+  - [x] Try 2-3 additional prompts
+  - [x] **TEST:** Fine-tuned responses show more domain-specific detail
 
 ---
 

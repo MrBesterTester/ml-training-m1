@@ -1,0 +1,49 @@
+{
+  "model": "models/llama-3.2-3b-4bit",
+  "adapter": "adapters/hw-diagnostics",
+  "max_tokens": 200,
+  "timestamp": "2026-03-13",
+  "results": [
+    {
+      "prompt": "What is boundary scan testing and when would you use it?",
+      "response": "Boundary scan testing is a functional test method that verifies the correct operation of a digital circuit by driving known values into the boundary pins of the device under test. The boundary pins are the input pins that connect the device to the outside world — typically the I/O pins that the device uses to communicate with the outside environment.\n\nThe boundary scan test method works by:\n\n1. Connecting a boundary scan bus (BSB) to the device under test. The BSB is a standardized 1-to-1 mapping of the device's I/O pins to the TAP controller's control pins.\n2. Driving known values into the boundary pins of the device under test. The values are typically 0s and 1s, which are the binary values that the device uses to represent logic states.\n3. Reading the output values from the device under test. The output values are typically captured by a boundary register, which stores the values in a shift register.\n4. Shift-reading the boundary register. The shift",
+      "generation_tps": 26.27,
+      "peak_memory_gb": 1.980,
+      "category": "Conceptual Q&A",
+      "label": "Boundary Scan Testing"
+    },
+    {
+      "prompt": "Explain the difference between ECC and non-ECC memory, and how memory errors are detected.",
+      "response": "ECC (Error-Correcting Code) and non-ECC (Error-Correcting Code) memory refer to two types of memory modules designed for use in computer systems. The primary difference between ECC and non-ECC memory is their ability to detect and correct memory errors.\n\nECC Memory: ECC memory is a type of memory that includes an additional parity bit in each byte. This extra bit is used to detect and correct single-bit errors that occur during data transfer. ECC memory is designed to provide high reliability and fault tolerance in critical applications, such as servers, mainframes, and embedded systems.\n\nNon-ECC Memory: Non-ECC memory, on the other hand, does not include the additional parity bit. It relies solely on the data integrity check (DCC) mechanism to detect errors. Non-ECC memory is less expensive than ECC memory but is less reliable and less suitable for critical applications.\n\nMemory Error Detection: Memory errors can occur due to various reasons, including:\n\n1. Single-bit",
+      "generation_tps": 26.16,
+      "peak_memory_gb": 2.010,
+      "category": "Conceptual Q&A",
+      "label": "ECC vs Non-ECC Memory"
+    },
+    {
+      "prompt": "What are common causes of intermittent PCIe bus errors and how would you diagnose them?",
+      "response": "Intermittent PCIe bus errors are a common issue in datacenter environments where high-speed storage and network devices are connected. The causes of intermittent PCIe bus errors are diverse and complex, but the following are some common causes:\n\n1. Power supply quality: A low-quality power supply can cause intermittent voltage drops, which can trigger PCIe bus errors. Check the power supply's specifications and ensure it meets the requirements of the devices connected to it.\n\n2. Cable quality: Low-quality PCIe cables can cause signal degradation, which may lead to intermittent errors. Use high-quality cables that meet the PCIe specification (e.g., PCIe 4.0 x16, 1-meter cable).\n\n3. Connector cleanliness: Dirt, dust, or corrosion on the PCIe connectors can cause intermittent contact loss, leading to bus errors. Clean the connectors with a soft brush or replace them if damaged.\n\n4. Component failure: A failing component, such as a GPU or CPU, can cause intermittent PCIe bus errors. Monitor system logs and",
+      "generation_tps": 26.21,
+      "peak_memory_gb": 2.002,
+      "category": "Conceptual Q&A",
+      "label": "PCIe Bus Errors"
+    },
+    {
+      "prompt": "A laptop powers on but the screen stays black. Walk me through a systematic hardware diagnostic process.",
+      "response": "I'll guide you through a systematic hardware diagnostic process to identify the root cause of your laptop's black screen issue. Please follow each step carefully and methodically.\n\nStep 1: Power Supply and Cables (5-10 minutes)\n\n1. Check the power cord: Ensure it's properly plugged into both the laptop and the wall outlet. Try swapping the power cord with a different one to rule out any issues with the current cord.\n2. Check the power button: Verify that the power button is functioning correctly. Press the power button for 10-15 seconds to discharge any residual power in the laptop.\n3. Check the motherboard power cable: Locate the motherboard power cable (usually labeled as 'PWR') and verify it's securely connected to both the motherboard and the power supply.\n\nStep 2: Display and Graphics (15-30 minutes)\n\n1. Check the display cable: Locate the display cable (DVI, HDMI, or VGA) and verify it's securely connected to both the",
+      "generation_tps": 26.21,
+      "peak_memory_gb": 2.006,
+      "category": "Conceptual Q&A",
+      "label": "Black Screen Diagnostic"
+    },
+    {
+      "prompt": "We just completed the boundary scan interconnect test suite on a new board revision. Here are the results from 10 consecutive runs across 200 nets. Can you take a look at the data?\n\nBoundary Scan Interconnect Test — 10 runs, 200 nets:\n  Run  1: 200/200 PASS\n  Run  2: 197/200 PASS (FAIL: NET_147, NET_148, NET_149)\n  Run  3: 200/200 PASS\n  Run  4: 198/200 PASS (FAIL: NET_147, NET_148)\n  Run  5: 200/200 PASS\n  Run  6: 197/200 PASS (FAIL: NET_147, NET_148, NET_149)\n  Run  7: 200/200 PASS\n  Run  8: 199/200 PASS (FAIL: NET_148)\n  Run  9: 200/200 PASS\n  Run 10: 198/200 PASS (FAIL: NET_147, NET_149)\n\nNet mapping:\n  NET_147: U3.B7 (FPGA) → U8.pin14 (DDR addr A12)\n  NET_148: U3.B8 (FPGA) → U8.pin15 (DDR addr A13)\n  NET_149: U3.B9 (FPGA) → U8.pin16 (DDR addr A14)",
+      "response": "The boundary scan interconnect test results show a mixed pattern across 10 consecutive runs. The pass/fail ratio is 98% (200/200 + 197/200 + 198/200 + 199/200 + 200/200 + 197/200 + 200/200 + 198/200 + 200/200 + 198/200), indicating that the board has some intermittent failures.\n\nThe failures are concentrated on three specific nets: NET_147, NET_148, and NET_149. These nets are part of the DDR address bus and connect the FPGA to the DDR memory.\n\nThe failures are intermittent and appear to be random. The failures are: NET_147 (Run 2, 4, 6, 10), NET_148 (Run 2, 4, 8), and NET_149 (Run 2, 4, 6, 10).\n\nThe most significant failure is NET_149, which appears in 4 out of 10 runs. This net is a critical component of the DDR address bus and its intermittent failure may cause the board to fail in production.\n\nThe failures on NET_147 and NET_148 are less frequent but still significant. NET_147 appears in 4 out of 10 runs, while NET_148 appears in 3 out of 10 runs.\n\nThe failures on NET_148 are the most recent (Run 8), and the board has 200/200 pass",
+      "generation_tps": 25.65,
+      "peak_memory_gb": 2.719,
+      "category": "Numerical Diagnostics (FD/FI)",
+      "label": "Boundary Scan Interconnect Results",
+      "max_tokens_override": 300
+    }
+  ]
+}
