@@ -110,10 +110,10 @@
 
 ## Phase 6 (Optional): Web UI & Publishing
 
-- [ ] **[Claude Code]** 6.1 Static comparison page
-  - [ ] Generate styled HTML from results/comparison.md
-  - [ ] Save as web/index.html
-  - [ ] **TEST:** Page renders correctly in browser
+- [x] **[Claude Code]** 6.1 Static comparison page *(REQ-026, completed 2026-03-13)*
+  - [x] Generate styled HTML from results/comparison.md
+  - [x] Save as web/index.html
+  - [x] **TEST:** Page renders correctly in browser
 
 - [ ] **[Claude Code + Sam]** 6.2 HuggingFace model card & upload
   - [ ] Write model card
