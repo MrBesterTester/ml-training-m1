@@ -71,11 +71,13 @@ Given 10 runs of a 200-net interconnect test with intermittent failures on 3 net
 
 **Fine-tuned model** — correctly identifies the 3 failing nets (NET_147/148/149), maps them to the DDR address bus, enumerates which runs they fail in, and frames the analysis in production risk terms.
 
-See [`results/comparison.md`](results/comparison.md) for all 12 comparisons and [`results/step3_2_comparison.md`](results/step3_2_comparison.md) for detailed analysis.
+**Want to see all 12 comparisons?** Open [`web/index.html`](web/index.html) for a styled, interactive side-by-side view of every prompt — conceptual Q&A, numerical diagnostics data, and eval set prompts with ground truth. This is the practical proof that the fine-tuning works.
+
+For the bigger picture — why this project matters, how LoRA is perturbation theory, and the career story behind it — see [`web/feature.html`](web/feature.html).
 
 ## Project Status
 
-**Phase 4 complete** — evaluation done, 12-prompt comparison generated. LoRA training: 600 iterations, val loss 2.809 → 2.037. See the [training report](results/training_report.md) for full details.
+**All 6 phases complete.** LoRA training: 600 iterations, val loss 2.809 → 2.037. Adapter weights published on [HuggingFace](https://huggingface.co/MrBesterTester/hw-diagnostics-advisor-llama3.2-3b-lora). See the [training report](results/training_report.md) for full details.
 
 ## Tech Stack
 
@@ -108,11 +110,14 @@ ml_training_m1/
 ├── data/                         ← training/eval datasets (JSONL)
 ├── adapters/                     ← trained LoRA adapter weights
 ├── models/                       ← (gitignored) downloaded base models
-└── results/
-    ├── comparison.md             ← 12 side-by-side base vs fine-tuned comparisons
-    ├── baseline_responses.json   ← base model responses (9 prompts)
-    ├── finetuned_responses.json  ← fine-tuned model responses
-    └── training_report.md        ← training run details and metrics
+├── results/
+│   ├── comparison.md             ← 12 side-by-side base vs fine-tuned comparisons
+│   ├── baseline_responses.json   ← base model responses (9 prompts)
+│   ├── finetuned_responses.json  ← fine-tuned model responses
+│   └── training_report.md        ← training run details and metrics
+└── web/
+    ├── index.html                ← styled comparison page (12 entries, open in browser)
+    └── feature.html              ← portfolio feature page for samkirk.com
 ```
 
 ## Reproduce It
