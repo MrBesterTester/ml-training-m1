@@ -98,13 +98,13 @@
 
 ## Phase 5: Repo Finalization
 
-- [ ] **[Claude Code]** 5.1 End-to-end verification & cleanup
-  - [ ] Remove scratch files, temp outputs, unused code
-  - [ ] Verify pipeline sequence runs (scripts exist and work)
-  - [ ] Confirm no secrets/tokens committed
-  - [ ] Confirm models/ and .venv/ are gitignored
-  - [ ] Final commit
-  - [ ] **TEST:** Clean git status, no large binaries tracked
+- [x] **[Claude Code]** 5.1 End-to-end verification & cleanup *(REQ-025, completed 2026-03-13)*
+  - [x] Remove scratch files, temp outputs, unused code
+  - [x] Verify pipeline sequence runs (scripts exist and work)
+  - [x] Confirm no secrets/tokens committed
+  - [x] Confirm models/ and .venv/ are gitignored
+  - [x] Final commit
+  - [x] **TEST:** Clean git status, no large binaries tracked
 
 ---
 

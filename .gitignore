@@ -34,6 +34,7 @@ adapters/hw-diagnostics/0*_adapters.safetensors
 
 # Data backups
 *.alpaca-bak
+*.bak
 
 # do-work transient files
 do-work/working/
