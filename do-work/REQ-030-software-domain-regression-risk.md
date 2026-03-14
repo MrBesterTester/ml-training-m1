@@ -22,7 +22,17 @@ The evaluation reveals three systemic patterns that predict software-domain fail
 
 2. **Degenerate repetition under uncertainty.** Entries #5 (TDR), #7 (Thermal), #9 (Voltage Margining), and #11 (MLCC vs Polymer) all show the fine-tuned model falling into repetitive loops. This happens most when the model has partial domain knowledge but insufficient signal to complete a coherent analysis. Software prompts would be maximally out-of-distribution, making repetition even more likely.
 
-3. **Numerical reasoning gaps would persist — and transfer to software data.** The model already misses critical diagnostic findings in the hardware evaluation data: the TDR impedance anomaly at 44-52mm (dipping to 38.5 ohm — entry #5), the ADC stuck bit indicated by 3 missing codes at mid-scale (entry #8), and the voltage margin spec violation where actual low-side margin is only 4.8% vs the required 10% (entry #9). In every case, the model can echo the vocabulary ("impedance," "code density," "margining") but cannot perform the analytical step of "this number is wrong and here's why." Software-oriented numerical data — latency percentiles, memory allocation profiles, CPU flame graphs, database query plan costs, log frequency analysis — would hit the exact same wall. The model would narrate the data without identifying the anomaly, which is the entire point of presenting data to a diagnostic assistant.
+3. **Numerical reasoning gaps would persist — and transfer to software data.** The model already misses critical diagnostic findings in the hardware evaluation data. In every case, it can echo the vocabulary but cannot perform the analytical step of "this number is wrong and here's why."
+
+   Specific failures from the evaluation report:
+
+   - **TDR impedance anomaly (entry #5):** The data shows impedance dipping to 38.5 ohm at 44-52mm on a 50 ohm target — a 23% deviation in a 4mm region, a textbook discontinuity indicating a physical defect (damaged trace, bad via transition, or contamination). The fine-tuned model said "the impedance is within 0.5 ohm of the target at all distances." It narrated the nominal data and completely missed the anomaly.
+
+   - **ADC stuck bit (entry #8):** Three consecutive missing codes at mid-scale (2047-2049) with adjacent codes absorbing double counts (code 2046: 512, code 2050: 518 vs expected ~256). This is a classic stuck-bit signature in the SAR ADC's MSB region. The fine-tuned model produced statistical vocabulary (confidence intervals, chi-squared) but never identified what the missing codes mean.
+
+   - **Voltage margin spec violation (entry #9):** The board fails at all voltages below 3.14V, but the spec requires pass across +/-10% (down to 2.97V). The actual low-side margin is only (3.30 - 3.14) / 3.30 = 4.8%, less than half the required 10%. The fine-tuned model correctly found the pass/fail boundary at 3.14V but never flagged the spec non-compliance — the single most important conclusion in the data.
+
+   Software-oriented numerical data — latency percentiles, memory allocation profiles, CPU flame graphs, database query plan costs, log frequency analysis — would hit the exact same wall. The model would narrate the data without identifying the anomaly, which is the entire point of presenting data to a diagnostic assistant.
 
 4. **Predicted behavior on software-oriented prompts:**
 
