@@ -6,7 +6,7 @@ Fine-tuning [Llama 3.2 3B](https://huggingface.co/meta-llama/Llama-3.2-3B-Instru
 
 People constantly complain that ML and LLM results are opaque — that they can't understand what a model is doing or why it gives the answers it does. This project takes the position that **if you don't understand the foundational physics, you'll never understand the results.** Full stop.
 
-The training data follows a **physics-first explanatory style** inspired by [CompuFlair's](https://compuflair.com) approach: every answer is grounded in the physical principles that govern the system. Not "check your impedance" but "impedance mismatches cause reflections because energy must be conserved at the boundary — the reflected wave carries the energy that can't propagate forward, governed by the reflection coefficient $\Gamma = (Z_L - Z_0) / (Z_L + Z_0)$."
+The training data follows a **physics-first explanatory style** inspired by CompuFlair's (Ardavan Borzou) approach: every answer is grounded in the physical principles that govern the system. Not "check your impedance" but "impedance mismatches cause reflections because energy must be conserved at the boundary — the reflected wave carries the energy that can't propagate forward, governed by the reflection coefficient $\Gamma = (Z_L - Z_0) / (Z_L + Z_0)$."
 
 This isn't about making answers longer or more academic. It's about building **genuine understanding**:
 
