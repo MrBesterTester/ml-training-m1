@@ -115,7 +115,7 @@
   - [x] Save as web/index.html
   - [x] **TEST:** Page renders correctly in browser
 
-- [ ] **[Claude Code + Sam]** 6.2 HuggingFace model card & upload
-  - [ ] Write model card
-  - [ ] Upload adapter weights to HuggingFace Hub
-  - [ ] **TEST:** Model page accessible on huggingface.co
+- [x] **[Claude Code + Sam]** 6.2 HuggingFace model card & upload *(completed 2026-03-13)*
+  - [x] Write model card
+  - [x] Upload adapter weights to HuggingFace Hub
+  - [x] **TEST:** Model page accessible on huggingface.co
