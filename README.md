@@ -21,7 +21,7 @@ The result is a model that doesn't just know *what* to do — it knows *why*, an
 
 ## LoRA Fine-Tuning: A Physics Interpretation
 
-LoRA isn't just a memory optimization trick — it's **perturbation theory** applied to neural networks. The full physics interpretation with proper math notation and diagrams is in [`docs/COMPUFLAIR_LORA_INTERPRETATION.html`](docs/COMPUFLAIR_LORA_INTERPRETATION.html) (open in browser for KaTeX-rendered equations and SVG diagrams). Here's the core idea:
+LoRA isn't just a memory optimization trick — it's **perturbation theory** applied to neural networks. The full physics interpretation with proper math notation and diagrams is in [`Compu-Flair/Physics_of_LoRA.html`](Compu-Flair/Physics_of_LoRA.html) (open in browser for KaTeX-rendered equations and SVG diagrams). Here's the core idea:
 
 The pre-trained base model is a thermodynamic system that has already been annealed to a low-energy equilibrium — Meta spent millions of dollars and weeks of GPU time carefully cooling 3 billion parameters into this state. Full fine-tuning would unfreeze all of them and let them move in response to your 252 training examples. In physics terms, **you'd be melting the entire system down and re-annealing from scratch** — destroying all that carefully achieved equilibrium because you wanted to add some knowledge about JTAG chains. You don't melt down a cathedral to add a room.
 
@@ -47,9 +47,35 @@ The training hyperparameters map directly to thermodynamic quantities:
 
 The deepest insight: **LoRA works because the distance between "general-purpose LLM" and "hardware diagnostics specialist" lies in a very low-dimensional subspace of parameter space.** Most of the energy landscape doesn't need to change — the domain knowledge occupies only a few modes of the full system.
 
+## Key Results
+
+The fine-tuned model shows clear improvement across all prompt categories. Here are two highlighted comparisons from the [full evaluation](results/comparison.md) (12 side-by-side comparisons):
+
+### Boundary Scan Testing
+
+**Prompt:** *What is boundary scan testing and when would you use it?*
+
+**Base model** — fundamentally wrong:
+> Boundary scan testing is a method of testing and verifying the functionality of a printed circuit board (PCB) by scanning the board's boundary, which refers to the edges and corners of the board.
+
+**Fine-tuned model** — technically correct:
+> Boundary scan testing is a functional test method that verifies the correct operation of a digital circuit by driving known values into the boundary pins of the device under test. [...] The BSB is a standardized 1-to-1 mapping of the device's I/O pins to the TAP controller's control pins.
+
+The base model doesn't know what boundary scan is. The fine-tuned model correctly describes TAP controllers, boundary registers, and shift registers.
+
+### Numerical Data Analysis (Boundary Scan Interconnect Results)
+
+Given 10 runs of a 200-net interconnect test with intermittent failures on 3 nets:
+
+**Base model** — wrong failure counts, nonsensical percentages.
+
+**Fine-tuned model** — correctly identifies the 3 failing nets (NET_147/148/149), maps them to the DDR address bus, enumerates which runs they fail in, and frames the analysis in production risk terms.
+
+See [`results/comparison.md`](results/comparison.md) for all 12 comparisons and [`results/step3_2_comparison.md`](results/step3_2_comparison.md) for detailed analysis.
+
 ## Project Status
 
-**Phase 3 complete** — LoRA training finished (600 iterations, val loss 2.809 → 2.037). See the [training report](results/training_report.md) for full details.
+**Phase 4 complete** — evaluation done, 12-prompt comparison generated. LoRA training: 600 iterations, val loss 2.809 → 2.037. See the [training report](results/training_report.md) for full details.
 
 ## Tech Stack
 
@@ -65,23 +91,65 @@ The deepest insight: **LoRA works because the distance between "general-purpose 
 ```text
 ml_training_m1/
 ├── docs/
-│   ├── SPECIFICATION.md                  ← what we're building
-│   ├── BLUEPRINT.md                      ← how to build it (step-by-step)
-│   ├── TODO.md                           ← implementation checklist
-│   ├── COMPUFLAIR_LORA_INTERPRETATION.html ← physics interpretation of LoRA (KaTeX + SVG)
-│   └── COMPUFLAIR_LORA_INTERPRETATION.md  ← same content, plain markdown
+│   ├── SPECIFICATION.md          ← what we're building
+│   ├── BLUEPRINT.md              ← how to build it (step-by-step)
+│   └── TODO.md                   ← implementation checklist
 ├── Compu-Flair/
-│   ├── Physics_of_LoRA.html              ← unified physics interpretation (thermodynamics + normal modes)
+│   ├── Physics_of_LoRA.html      ← unified physics interpretation (thermodynamics + normal modes)
 │   ├── Original_Proposal_CompuFlair.html ← original portfolio plan (physics-ML pedagogy)
-│   └── Alternative_Proposal_LLM_FineTuning_Project.md ← pivot from CompuFlair curriculum to this project
+│   ├── Alternative_Proposal_LLM_FineTuning_Project.md ← pivot to this project
+│   └── archive/                  ← superseded source documents
 ├── scripts/
-│   ├── generate_dataset.py ← topic taxonomy, physics mappings, dataset generation
-│   ├── qa_bank.py          ← 252 physics-grounded Q&A pairs (training data)
-│   └── verify_inference.py ← base model inference verification
-├── data/                   ← training/eval datasets (JSONL, Alpaca format)
-├── adapters/               ← trained LoRA adapter weights
-├── models/                 ← (gitignored) downloaded base models
-└── results/                ← evaluation outputs, baseline responses
+│   ├── generate_dataset.py       ← topic taxonomy, physics mappings, dataset generation
+│   ├── qa_bank.py                ← 252 physics-grounded Q&A pairs (training data)
+│   ├── split_dataset.py          ← 80/20 train/eval split
+│   ├── train.py                  ← LoRA training wrapper
+│   └── evaluate.py               ← base vs fine-tuned comparison generator
+├── data/                         ← training/eval datasets (JSONL)
+├── adapters/                     ← trained LoRA adapter weights
+├── models/                       ← (gitignored) downloaded base models
+└── results/
+    ├── comparison.md             ← 12 side-by-side base vs fine-tuned comparisons
+    ├── baseline_responses.json   ← base model responses (9 prompts)
+    ├── finetuned_responses.json  ← fine-tuned model responses
+    └── training_report.md        ← training run details and metrics
+```
+
+## Reproduce It
+
+**Prerequisites:** Apple Silicon Mac (M1+), Python 3.10+, HuggingFace account with Llama access.
+
+```bash
+# 1. Setup
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# 2. Download & quantize the base model (~2GB)
+python -m mlx_lm.convert \
+  --hf-path meta-llama/Llama-3.2-3B-Instruct \
+  --mlx-path ./models/llama-3.2-3b-4bit \
+  --quantize --q-bits 4
+
+# 3. Train (~45 min on M1)
+python -m mlx_lm.lora \
+  --model ./models/llama-3.2-3b-4bit \
+  --data ./data \
+  --train \
+  --iters 600 \
+  --batch-size 2 \
+  --lora-layers 8 \
+  --learning-rate 1e-5 \
+  --adapter-path ./adapters/hw-diagnostics
+
+# 4. Inference with fine-tuned model
+python -m mlx_lm.generate \
+  --model ./models/llama-3.2-3b-4bit \
+  --adapter-path ./adapters/hw-diagnostics \
+  --prompt "What is boundary scan testing and when would you use it?" \
+  --max-tokens 300
+
+# 5. Run evaluation (generates results/comparison.md)
+python scripts/evaluate.py
 ```
 
 ## Pipeline
@@ -90,14 +158,8 @@ ml_training_m1/
 2. **Base Model** — Download & quantize Llama 3.2 3B to 4-bit MLX format
 3. **Dataset** — 252 Q&A pairs across 12 hardware diagnostics categories, physics-grounded
 4. **LoRA Training** — 600 iterations, batch 2, 8 LoRA layers, lr 1e-5
-5. **Evaluation** — Side-by-side base vs. fine-tuned comparisons
+5. **Evaluation** — Side-by-side base vs. fine-tuned comparisons (12 prompts)
 6. **Publishing** — Static comparison page, HuggingFace upload
-
-## Implementation Approach
-
-This project uses the **parallel multi-agent strategy** for large content generation tasks. Rather than running one agent sequentially through hundreds of items, work is split across multiple parallel agents by category — dramatically reducing wall-clock time for bulk generation.
-
-This pattern applies broadly: any time you need to generate large volumes of structured content (dataset entries, test cases, documentation), split by natural boundaries and run agents in parallel.
 
 ## CompuFlair Source Materials
 

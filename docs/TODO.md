@@ -84,15 +84,15 @@
   - [x] Write results/comparison.md with side-by-side output (base vs fine-tuned)
   - [x] **TEST:** results/comparison.md has 10-15 formatted comparison entries covering both conceptual and numerical prompts
 
-- [ ] **[Claude Code]** 4.2 Write README
-  - [ ] Project description and motivation
-  - [ ] **CompuFlair physics-first interpretation** — front-and-center explanation of why physics-grounded responses matter, how this settles the "I don't understand ML results" complaint, and what makes this model genuinely distinctive
-  - [ ] Hardware and technical approach
-  - [ ] Key results (2-3 highlighted comparisons)
-  - [ ] Reproduction steps
-  - [ ] Project structure
-  - [ ] Acknowledgments
-  - [ ] **TEST:** README is complete and references only files that exist
+- [x] **[Claude Code]** 4.2 Write README *(REQ-023, completed 2026-03-13)*
+  - [x] Project description and motivation
+  - [x] **CompuFlair physics-first interpretation** — front-and-center explanation of why physics-grounded responses matter, how this settles the "I don't understand ML results" complaint, and what makes this model genuinely distinctive
+  - [x] Hardware and technical approach
+  - [x] Key results (2-3 highlighted comparisons)
+  - [x] Reproduction steps
+  - [x] Project structure
+  - [x] Acknowledgments
+  - [x] **TEST:** README is complete and references only files that exist
 
 ---
 
