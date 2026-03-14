@@ -453,7 +453,7 @@
   /* ===== Links section ===== */
   .links-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
     margin-top: 1.5rem;
   }
@@ -910,6 +910,10 @@
       <a href="index.html" class="link-card">
         <div class="link-title">Full Comparison</div>
         <div class="link-desc">12 side-by-side base vs fine-tuned results</div>
+      </a>
+      <a href="https://huggingface.co/MrBesterTester/hw-diagnostics-advisor-llama3.2-3b-lora" class="link-card">
+        <div class="link-title">HuggingFace Model</div>
+        <div class="link-desc">Download LoRA adapter weights</div>
       </a>
       <a href="https://samkirk.com" class="link-card">
         <div class="link-title">samkirk.com</div>
