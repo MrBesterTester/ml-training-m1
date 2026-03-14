@@ -76,13 +76,13 @@
 
 ## Phase 4: Evaluation & Documentation
 
-- [ ] **[Claude Code]** 4.1 Create evaluation script & generate comparisons
-  - [ ] Create scripts/evaluate.py
-  - [ ] Reuse the 9 baseline prompts from results/baseline_responses.json (4 conceptual Q&A + 5 FD/FI numerical) as core comparison set
-  - [ ] Optionally add more prompts from eval set to reach 10-15 total
-  - [ ] Run fine-tuned model on each prompt; base model responses already captured in baselines
-  - [ ] Write results/comparison.md with side-by-side output (base vs fine-tuned)
-  - [ ] **TEST:** results/comparison.md has 10-15 formatted comparison entries covering both conceptual and numerical prompts
+- [x] **[Claude Code]** 4.1 Create evaluation script & generate comparisons *(completed 2026-03-13)*
+  - [x] Create scripts/evaluate.py
+  - [x] Reuse the 9 baseline prompts from results/baseline_responses.json (4 conceptual Q&A + 5 FD/FI numerical) as core comparison set
+  - [x] Optionally add more prompts from eval set to reach 10-15 total
+  - [x] Run fine-tuned model on each prompt; base model responses already captured in baselines
+  - [x] Write results/comparison.md with side-by-side output (base vs fine-tuned)
+  - [x] **TEST:** results/comparison.md has 10-15 formatted comparison entries covering both conceptual and numerical prompts
 
 - [ ] **[Claude Code]** 4.2 Write README
   - [ ] Project description and motivation
