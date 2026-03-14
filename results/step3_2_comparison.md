@@ -115,6 +115,13 @@
 
 ## Summary
 
+The LoRA fine-tuning produced clear, measurable improvements across every prompt category:
+
+- **Boundary scan testing** saw the most dramatic change — the base model fundamentally misunderstood the concept ("scanning the board's edges and corners"), while the fine-tuned model correctly describes TAP controllers, boundary registers, and shift registers.
+- **Numerical data analysis** (interconnect test results) went from wrong failure counts and nonsensical percentages to correctly identifying failing nets, mapping them to the DDR address bus, and framing results in production risk terms.
+- **Domain specificity** improved across all conceptual prompts — the fine-tuned model uses PCIe spec references (4.0 x16), cable length specs, time-estimated diagnostic steps, and structured field-engineer language that the base model lacks entirely.
+- **Performance overhead is minimal** — ~26 tok/s generation (vs ~29 base), ~2.0 GB peak memory with adapter loaded.
+
 | Prompt | Base Model | Fine-Tuned | Improvement |
 |--------|-----------|------------|-------------|
 | Boundary Scan | Fundamentally wrong | Technically correct | **Major** |
