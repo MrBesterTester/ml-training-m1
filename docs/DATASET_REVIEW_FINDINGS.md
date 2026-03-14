@@ -91,7 +91,7 @@ This was well-intentioned but conflated two different things.
 
 There are actually **two separate roles** for "physics-first" in this project:
 
-1. **Understanding the ML process through physics** — the CompuFlair interpretation of LoRA as perturbation theory, learning rate as temperature, quantization as literal quantization. This is captured excellently in `docs/COMPUFLAIR_LORA_INTERPRETATION.md` and is the project's distinctive intellectual contribution.
+1. **Understanding the ML process through physics** — the CompuFlair interpretation of LoRA as perturbation theory, learning rate as temperature, quantization as literal quantization. This is captured excellently in `Compu-Flair/Physics_of_LoRA.html` and is the project's distinctive intellectual contribution.
 
 2. **Physics in the training data** — the spec mandated physics in every response, which led to 252 entries that all explain concepts through physics. But physics-grounded *explanations* are not the same as physics-grounded *diagnostics*.
 
@@ -147,7 +147,7 @@ To be explicit about the distinction:
 
 | Aspect | What It Means | Where It Lives |
 |---|---|---|
-| **Physics-first understanding of LoRA** | The ML process itself explained through thermodynamics, perturbation theory, annealing | `docs/COMPUFLAIR_LORA_INTERPRETATION.md`, README |
+| **Physics-first understanding of LoRA** | The ML process itself explained through thermodynamics, perturbation theory, annealing | `Compu-Flair/Physics_of_LoRA.html`, README |
 | **Physics in the training data** | Responses grounded in physical principles where physics is the actual explanation | The Q&A dataset — but only where physics is genuinely load-bearing |
 
 The first is the project's thesis. The second is a quality criterion for *some* of the training data — specifically the entries where the topic is inherently physical (signal integrity, thermal behavior, circuit theory). For software/protocol topics, honest triage ("this isn't a physics problem") is more valuable than forced physics analogies.
@@ -198,4 +198,4 @@ The SPECIFICATION.md and BLUEPRINT.md should be updated to reflect this understa
 - IBM RAS (Reliability, Availability, Serviceability) — [z/OS Basic Skills](https://www.ibm.com/docs/en/zos-basic-skills?topic=it-mainframe-strengths-reliability-availability-serviceability)
 - FD/FI (Fault Detection / Fault Isolation) testability metrics — [DSI International](https://www.dsiintl.com/products/express/diagnostic-design-and-analysis/fdfi-statistics-by-category-report/)
 - IBM Symptom-to-FRU methodology — [PC Server 330 Service Guide](https://www.ibm.com/support/pages/symptom-fru-index-pc-server-330)
-- CompuFlair physics interpretation of LoRA — `docs/COMPUFLAIR_LORA_INTERPRETATION.md`
+- CompuFlair physics interpretation of LoRA — `Compu-Flair/Physics_of_LoRA.html`
