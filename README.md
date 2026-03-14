@@ -71,7 +71,7 @@ Given 10 runs of a 200-net interconnect test with intermittent failures on 3 net
 
 **Fine-tuned model** — correctly identifies the 3 failing nets (NET_147/148/149), maps them to the DDR address bus, enumerates which runs they fail in, and frames the analysis in production risk terms.
 
-**Want to see all 12 comparisons?** Open [`web/index.html`](web/index.html) for a styled, interactive side-by-side view of every prompt — conceptual Q&A, numerical diagnostics data, and eval set prompts with ground truth. This is the practical proof that the fine-tuning works.
+**Want to see all 12 comparisons?** Open [`web/evaluation-report.html`](web/evaluation-report.html) for a styled, interactive side-by-side view of every prompt — conceptual Q&A, numerical diagnostics data, and eval set prompts with ground truth. This is the practical proof that the fine-tuning works.
 
 For the bigger picture — why this project matters, how LoRA is perturbation theory, and the career story behind it — see [`web/feature.html`](web/feature.html).
 
@@ -116,7 +116,7 @@ ml_training_m1/
 │   ├── finetuned_responses.json  ← fine-tuned model responses
 │   └── training_report.md        ← training run details and metrics
 └── web/
-    ├── index.html                ← styled comparison page (12 entries, open in browser)
+    ├── evaluation-report.html    ← full evaluation report (12 entries, open in browser)
     └── feature.html              ← portfolio feature page for samkirk.com
 ```
 
