@@ -6,7 +6,7 @@ Fine-tuning [Llama 3.2 3B](https://huggingface.co/meta-llama/Llama-3.2-3B-Instru
 
 People constantly complain that ML and LLM results are opaque — that they can't understand what a model is doing or why it gives the answers it does. This project takes the position that **if you don't understand the foundational physics, you'll never understand the results.** Full stop.
 
-The training data follows a **physics-first explanatory style** inspired by [CompuFlair's](https://compuflair.com) approach: every answer is grounded in the physical principles that govern the system. Not "check your impedance" but "impedance mismatches cause reflections because energy must be conserved at the boundary — the reflected wave carries the energy that can't propagate forward, governed by the reflection coefficient Gamma = (Z_L - Z_0) / (Z_L + Z_0)."
+The training data follows a **physics-first explanatory style** inspired by [CompuFlair's](https://compuflair.com) approach: every answer is grounded in the physical principles that govern the system. Not "check your impedance" but "impedance mismatches cause reflections because energy must be conserved at the boundary — the reflected wave carries the energy that can't propagate forward, governed by the reflection coefficient $\Gamma = (Z_L - Z_0) / (Z_L + Z_0)$."
 
 This isn't about making answers longer or more academic. It's about building **genuine understanding**:
 
@@ -27,13 +27,11 @@ The pre-trained base model is a thermodynamic system that has already been annea
 
 **LoRA's insight: don't melt it — perturb it.** Freeze the solved system and learn a small correction:
 
-```
-W = W₀ + ΔW = W₀ + BA
-```
+$$W = W_0 + \Delta W = W_0 + BA$$
 
-- **W₀** (frozen base weights) = the ground state, the solved unperturbed system
-- **ΔW = BA** (low-rank adapters, rank 8) = the first-order perturbation correction
-- **~1-2M trainable parameters** out of 3B = only 1 in 1500 degrees of freedom moves
+- $W_0$ (frozen base weights) = the ground state, the solved unperturbed system
+- $\Delta W = BA$ (low-rank adapters, rank 8) = the first-order perturbation correction
+- ~1–2M trainable parameters out of 3B = only 1 in 1,500 degrees of freedom moves
 
 The training hyperparameters map directly to thermodynamic quantities:
 
