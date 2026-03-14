@@ -8,6 +8,10 @@ related: [REQ-028, REQ-029]
 
 # Evaluate and Mitigate Software-Domain Regression from Hardware-Only LoRA Fine-Tuning
 
+## The Question
+
+Based on the evaluation report comparing base vs fine-tuned model responses across 12 hardware diagnostics prompts — how would the model respond if it were given a truly software-oriented question or set of data?
+
 ## What
 
 The current LoRA adapter was trained exclusively on ~416 hardware diagnostics Q&A pairs. Analysis of the 12-prompt evaluation report (`web/evaluation-report.html`) reveals that while the fine-tuned model shows clear improvement on hardware topics, it would likely **regress or produce misleading output** on purely software-oriented questions. This REQ captures the problem, predicted failure modes, and recommended mitigations.
