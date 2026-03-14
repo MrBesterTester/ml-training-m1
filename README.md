@@ -165,11 +165,14 @@ python scripts/evaluate.py
 
 This project's physics-first approach draws on three bodies of work comparing physics and ML:
 
-| Source | Location | What It Contains |
-|---|---|---|
-| **CompuFlair (Ardavan Borzou)** | `Compu-Flair/Original_Proposal_CompuFlair.html` | Portfolio plan inspired by Borzou's "P = e^(-F)/Z" framework — the idea that all of ML can be interpreted through the Gibbs-Boltzmann equation. Physics-first pedagogy for ML practitioners. |
-| **Alternative Proposal** | `Compu-Flair/Alternative_Proposal_LLM_FineTuning_Project.md` | The pivot document: why LoRA fine-tuning on Sam's hardware diagnostics expertise is a stronger portfolio piece than the original CompuFlair curriculum path. This is the project's origin story. |
-| **Vanchurin / CompuFlair / Brunton Comparison** | `../Physics ML - Vanchurin-Comput-flare/` (6 HTML documents) | Deep comparison of three approaches to physics-ML intersection: Vanchurin (learning dynamics *are* physics), Borzou/CompuFlair (physics as interpretive lens for ML), Brunton (embed physics into ML architectures). Includes the "Three Roles of the Hamiltonian" analysis. |
+- **CompuFlair (Ardavan Borzou)** — [`Compu-Flair/Original_Proposal_CompuFlair.html`](Compu-Flair/Original_Proposal_CompuFlair.html)
+  Portfolio plan inspired by Borzou's "P = e^(-F)/Z" framework — the idea that all of ML can be interpreted through the Gibbs-Boltzmann equation. Physics-first pedagogy for ML practitioners.
+
+- **Alternative Proposal** — [`Compu-Flair/Alternative_Proposal_LLM_FineTuning_Project.md`](Compu-Flair/Alternative_Proposal_LLM_FineTuning_Project.md)
+  The pivot document: why LoRA fine-tuning on Sam's hardware diagnostics expertise is a stronger portfolio piece than the original CompuFlair curriculum path. This is the project's origin story.
+
+- **Vanchurin / CompuFlair / Brunton Comparison** — `../Physics ML - Vanchurin-Comput-flare/` (6 HTML documents)
+  Deep comparison of three approaches to physics-ML intersection: Vanchurin (learning dynamics *are* physics), Borzou/CompuFlair (physics as interpretive lens for ML), Brunton (embed physics into ML architectures). Includes the "Three Roles of the Hamiltonian" analysis.
 
 The CompuFlair curriculum itself remains a separate learning track. What this project adopts is the **explanatory style**: grounding every answer in the physical principles that govern the system, and interpreting the ML pipeline itself (LoRA, quantization, training dynamics) through the same physics lens.
 
