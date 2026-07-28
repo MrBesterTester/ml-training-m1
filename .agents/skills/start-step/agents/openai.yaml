@@ -1,0 +1,4 @@
+interface:
+  display_name: "Start Step"
+  short_description: "Help with Start Step tasks"
+  default_prompt: "Use $start-step to help with this task."

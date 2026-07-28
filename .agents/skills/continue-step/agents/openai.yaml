@@ -1,0 +1,4 @@
+interface:
+  display_name: "Continue Step"
+  short_description: "Help with Continue Step tasks"
+  default_prompt: "Use $continue-step to help with this task."

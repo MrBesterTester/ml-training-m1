@@ -1,8 +1,6 @@
 ---
 name: do-work
-description: Task queue - add requests or process pending work
-argument-hint: run | (task to capture) | verify | cleanup | version | changelog
-upstream: https://raw.githubusercontent.com/bladnman/do-work/main/SKILL.md
+description: Capture requests into the ml_training_m1 do-work queue, process pending work, verify request coverage, clean the archive, or inspect the skill version. Use when the user asks to do work, queue a task, run the queue, verify capture, or clean up completed REQs.
 ---
 
 # Do-Work Skill
@@ -152,4 +150,3 @@ Follow the detailed instructions in:
 - [verify-plan action](./actions/verify-plan.md) - Plan coverage verification (runs after planning in the work action)
 - [cleanup action](./actions/cleanup.md) - Archive consolidation and UR closure
 - [version action](./actions/version.md) - Version, updates & changelog
-

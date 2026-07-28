@@ -185,6 +185,20 @@ A natural next step is training the model to **interpret actual test program out
 
 This is a hard problem because test program output formats vary widely across platforms, vendors, and test environments. A future dataset expansion would need to account for that diversity. But it's where the real diagnostic value lives — bridging the gap between raw test output and actionable fault isolation.
 
+## Q&A
+
+### How did you ground the LLM in physics?
+
+The base Llama 3.2 3B model was already reasonably good at answering basic hardware testing questions — that was evident even during the initial smoke test. The grounding happened in layers across successive fine-tuning versions:
+
+**v1 — Physics-first Q&A:** Claude (Opus 4.6) generated the training dataset of 252 Q&A pairs, each one written so the model would answer hardware testing questions on a physics basis — not just "what to do" but "why, from first principles." This shifted the model from generic tech-support answers toward physics-grounded explanations.
+
+**v2 — Sensor data interpretation:** Added synthetic sensor data streams (also generated via Opus), pushing the model to interpret raw numerical data in terms of the underlying physics. The dataset was tagged by diagnostic category: **Fault Detection**, **Fault Isolation**, **Fault Detection + Isolation**, or **TRIAGE** (likely not just hardware). This gave the model structured reasoning about what kind of problem it's looking at.
+
+**v3 (planned) — Fault classification:** Re-tune so the model actually classifies faults into those four categories as part of its output. This should have been in v2 but wasn't — the tags were in the training data but the model wasn't trained to produce them as explicit classifications.
+
+The project planning itself was heavily influenced by [CompuFlair](https://compu-flair.com) (Ardavan Borzou), a physics-first approach to machine learning that interprets ML through the Gibbs-Boltzmann equation. That framework is what makes sense of the LoRA fine-tuning process itself — perturbation theory, thermodynamic annealing, quantization of state space — not just the training data content. See the [LoRA physics interpretation](#lora-fine-tuning-a-physics-interpretation) above and the full writeup in [`Compu-Flair/Physics_of_LoRA.html`](Compu-Flair/Physics_of_LoRA.html).
+
 ## Author
 
 Sam Kirk (with Claude Code)
