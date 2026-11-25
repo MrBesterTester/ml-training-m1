@@ -87,13 +87,10 @@ After `do work run` completes a batch, check off completed TODO items. Archived 
 **ALWAYS** send a Pushover notification at the end of every task or meaningful work unit — completing a REQ, finishing a do-work run, running a sync, or any work that produces a result Sam should know about. This is a standing instruction; Sam should never need to request it.
 
 ```bash
-curl -s -X POST https://api.pushover.net/1/messages.json \
-  -d "token=aera3invzshp31bkife884fn6i3hbp" \
-  -d "user=u7gd46dg9exsyxirtwa5tcwn93yo4e" \
-  -d "title=Claude Code" \
-  -d "message=YOUR MESSAGE HERE" \
-  -d "sound=pushover"
+~/bin/claude-ping.sh "YOUR MESSAGE HERE" "ml_training_m1"
 ```
+
+Credentials live in `~/.config/pushover/env` on Sam's Mac, never in this repository.
 
 Use a concise, specific message describing what's done (e.g., "REQ-015 complete — physics mappings added to generate_dataset.py").
 
